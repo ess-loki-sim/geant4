@@ -1,0 +1,8 @@
+package(USEPKG G4StdGenerators)
+
+######################################################################
+
+
+Package providing scripts for running barrel simulations.
+
+Primary author: thomas.kittelmann@ess.eu

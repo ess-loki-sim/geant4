@@ -1,0 +1,8 @@
+package(USEPKG ScanUtils GriffAnaUtils SimpleHists PyAnaUtils MCPL G4GeoLoki)
+
+######################################################################
+
+
+Package providing scripts for analysis of SansTube simulations.
+
+Primary author: thomas.kittelmann@ess.eu

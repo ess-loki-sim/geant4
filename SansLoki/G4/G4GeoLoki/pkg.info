@@ -1,0 +1,8 @@
+package(USEPKG G4Interfaces)
+
+######################################################################
+
+
+Package providing Loki geometries.
+
+Primary authors: thomas.kittelmann@ess.eu kalliopi.kanaki@esss.se
