@@ -56,8 +56,10 @@ int main(int argc, char **argv)
   SimpleHists::HistCollection hc;
 
   const double sampleDetectorDistance = setup->geo().getParameterDouble("rear_detector_distance_m") * Units::m;
+  const int rearBankPixelNumber = 256;
+  printf("HARDCODED rear bank pixel number for analysis: %d\n", rearBankPixelNumber);
 
-  bcsBanks banks = bcsBanks(sampleDetectorDistance);
+  bcsBanks banks = bcsBanks(sampleDetectorDistance, rearBankPixelNumber);
   const int numberOfPixels = banks.getTotalNumberOfPixels();
 
   auto h_neutron_pixel_geantino = hc.book2D("Show pixels the geantinos entered", 256, 0, 256, numberOfPixels / 256, 0, numberOfPixels / 256, "h_neutron_pixel_geantino");
@@ -71,6 +73,11 @@ int main(int argc, char **argv)
   auto h_neutron_counters = hc.bookCounts("General neutron counters", "neutron_counters");
   auto countTestGeantino = h_neutron_counters->addCounter("all_geantino");
   auto countTestGeantinoAbsInMask = h_neutron_counters->addCounter("geantino_in_Mask");
+
+  if (numberOfPixels != 1605632) {
+    printf("Error: Wrong pixel number for this analysis\n");
+    return 1;
+  } 
 
   bool enteredArrayGeantino[1605632];                                                                    //array to find pixels the geantinos enter
   bool enteredArrayGeantino_masking[1605632];                                                            //array to find pixels the geantinos enter

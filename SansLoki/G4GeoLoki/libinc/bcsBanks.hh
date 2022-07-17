@@ -9,6 +9,10 @@ public:
   bcsBanks(double locRearBankDistance){
     rearBankDistance = locRearBankDistance;
   }
+  bcsBanks(double locRearBankDistance, int rearBankPixelNumber){
+    rearBankDistance = locRearBankDistance;
+    numberOfPixels[0] = rearBankPixelNumber;
+  }
 
   /// straw ///
   double getStrawOuterRadius() const;

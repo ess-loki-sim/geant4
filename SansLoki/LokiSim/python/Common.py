@@ -24,7 +24,7 @@ def launch(geo):
         gen = Gen.create()
         #gen.input_file = 'testbcs.mcpl'
         gen.input_file = launcher.getParameterString('mcplDirectory') + 'larmor_postsample.mcpl.gz'
-        #gen.input_file = launcher.getParameterString('mcplDirectory') + 'larmor_postsample_5000.mcpl.gz'
+        #gen.input_file = launcher.getParameterString('mcplDirectory') + 'larmor_postsample_n5000.mcpl.gz'
         gen.dz_meter = launcher.getParameterDouble('sample_generator_distance_meters') #translate z coordinates by McStas Sample-MCPL_output distance
         gen.dx_meter = launcher.getParameterDouble('x_offset_meters')
     elif launcher.getParameterString('event_gen')=='ascii':

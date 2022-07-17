@@ -68,8 +68,10 @@ int main(int argc, char**argv) {
   SimpleHists::HistCollection hc;
 
   const double sampleDetectorDistance = setup->geo().getParameterDouble("rear_detector_distance_m") *Units::m;
+  //TODO: try catch block might be needed to handle existing result files with no rear_bank_pixel_number param
+  const int rearBankPixelNumber = setup->geo().getParameterInt("rear_bank_pixel_number");
 
-  bcsBanks banks = bcsBanks(sampleDetectorDistance);
+  bcsBanks banks = bcsBanks(sampleDetectorDistance, rearBankPixelNumber);
 
   const double tubeRadius = banks.getTubeOuterRadius(); //12.7; 
 

@@ -2,7 +2,7 @@
 
 #Location where dg_code_framework is checked out (modify it if you use a
 #different location):
-DGCODE_FMWK_DIR="$HOME/devDgcode/dgcode_framework"
+DGCODE_FMWK_DIR="$HOME/devDgcodeSave/dg_dgcode"
 
 #Setup locations for where to keep your own project packages (the magic code
 #below defaults this to being below the directory of this bootstrap file):

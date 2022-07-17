@@ -2,7 +2,6 @@ package(USEPKG G4StdGenerators)
 
 ######################################################################
 
+Package providing scripts for running LOKI/BCS Geant4 simulations.
 
-Package providing scripts for running barrel simulations.
-
-Primary author: thomas.kittelmann@ess.eu
+Primary author: milan.klausz@ess.eu

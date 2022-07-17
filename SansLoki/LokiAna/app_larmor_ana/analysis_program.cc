@@ -256,10 +256,12 @@ int main(int argc, char**argv) {
       const double theta_true = Utils::theta(dir_true)/Units::degree;
       h_neutron_theta->fill(theta_true, neutron->weight());
 
-      double velocity_mcpl_calculated = (sourceSampleDistance / Units::m) / (stepFirst->preTime() / Units::s);
-      const double lambda_mcpl_calculated = Utils::neutron_meters_per_second_to_angstrom(velocity_mcpl_calculated);
+      if (gen.getName()=="G4MCPLPlugins/MCPLGen"){ //works only for non-zero initial TOF
+        double velocity_mcpl_calculated = (sourceSampleDistance / Units::m) / (stepFirst->preTime() / Units::s);
+        const double lambda_mcpl_calculated = Utils::neutron_meters_per_second_to_angstrom(velocity_mcpl_calculated);
 
-      h_mcpl_lambda_calculated->fill(lambda_mcpl_calculated, neutron->weight());
+        h_mcpl_lambda_calculated->fill(lambda_mcpl_calculated, neutron->weight());
+      }
 
       int seg_count_World = 0;
       double seg_length_World = 0.0;

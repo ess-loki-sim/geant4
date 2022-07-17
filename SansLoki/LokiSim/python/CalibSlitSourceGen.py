@@ -19,8 +19,8 @@ class CalibrationSlitSourceGen(G4CustomPyGen.GenBase):
     def init_generator(self,gun):
         gun.set_type('geantino') #neutron
 
-        #self._i = -1 #count events to shoot neutrons at each pixel
-        self._i = 16384 * 160 -1 #skip most of the pixels over the vacuum tank endig top
+        self._i = -1 #count events to shoot neutrons at each pixel
+        #self._i = 16384 * 160 -1 #skip most of the pixels over the vacuum tank endig top
         #self._i = 128*7 * (8 * 3 -4) - 1 #just for a figure
         #self._i = 512*7 * (8 * 3 -4  + 15*8) - 1 # 512*7 * (8 * 3 -4) - 1 #just for a figure
 

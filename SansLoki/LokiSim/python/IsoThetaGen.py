@@ -1,6 +1,5 @@
 from __future__ import print_function
 import G4CustomPyGen
-import G4Interfaces
 import Core.Units as Units
 import Utils.NeutronMath
 import math

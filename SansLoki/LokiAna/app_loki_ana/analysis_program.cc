@@ -107,8 +107,10 @@ int main(int argc, char**argv) {
   SimpleHists::HistCollection hc;
 
   const double sampleDetectorDistance = setup->geo().getParameterDouble("rear_detector_distance_m") *Units::m;
+  const int rearBankPixelNumber = setup->geo().getParameterInt("rear_bank_pixel_number");
+  printf("Rear bank pixel number: %d\n", rearBankPixelNumber);
 
-  bcsBanks banks = bcsBanks(sampleDetectorDistance);
+  bcsBanks banks = bcsBanks(sampleDetectorDistance, rearBankPixelNumber);
 
   const double tubeRadius = banks.getTubeOuterRadius(); //12.7; 
 
@@ -268,6 +270,11 @@ int main(int argc, char**argv) {
   auto count_neutrons_abs_BoronMask = neutron_ending_counters->addCounter("count_neutrons_abs_BoronMask");
   auto count_neutrons_abs_Gas = neutron_ending_counters->addCounter("count_neutrons_abs_Gas");
   auto count_neutrons_end_World = neutron_ending_counters->addCounter("count_neutrons_end_World");
+
+  if (numberOfPixels != 1605632) {
+    printf("Error: Wrong pixel number for this analysis\n");
+    return 1;
+  } 
 
   bool enteredArrayGeantino [1605632]; //array to find pixels the geantinos enter
   bool enteredArrayGeantino_masking[1605632]; //array to find pixels the geantinos enter

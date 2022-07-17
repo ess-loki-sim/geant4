@@ -34,6 +34,8 @@ int main(int argc, char **argv)
     return 1;
   }
 
+  auto &gen = setup->gen();
+
   setup->dump();
 
   GriffAnaUtils::TrackIterator primary_geantinos(&dr);
@@ -47,9 +49,11 @@ int main(int argc, char **argv)
 
   const double sampleDetectorDistance = setup->geo().getParameterDouble("rear_detector_distance_m") * Units::m;
 
-  bcsBanks banks = bcsBanks(sampleDetectorDistance);
   const int numberOfPixels = 802816; //1605632 for 1024 pixels; //TODO use rearbankOffset //banks.getTotalNumberOfPixels();
   const int strawPixelNumber = 512; // 1024;
+  printf("HARDCODED rear bank pixel number for analysis: %d\n", strawPixelNumber);
+
+  bcsBanks banks = bcsBanks(sampleDetectorDistance, strawPixelNumber);
 
   auto h_neutron_pixel_geantino = hc.book2D("Show pixels the geantinos entered", strawPixelNumber, 0, strawPixelNumber, numberOfPixels / strawPixelNumber, 0, numberOfPixels / strawPixelNumber, "h_neutron_pixel_geantino");
   h_neutron_pixel_geantino->setXLabel("Pixel ID along straw");
@@ -85,10 +89,29 @@ int main(int argc, char **argv)
   ////std::cout<<"\n ***** \n xBankEnterLimit: " << xBankEnterLimit << "\n yBankEnterLimit: "<< yBankEnterLimit<< "\n ****** \n";
   
   const double zVacuumTankEnd = sampleDetectorDistance - 90*Units::mm; // "The front of the Loki detector was 90 mm in front of the tank”
-  const double zBankFront = sampleDetectorDistance - banks.detectorSystemFrontDistanceFromBankFront(0) *Units::mm; //checking neutons when entering the bank volume
-  const double xWidthVacuumTankEnd = 790 *Units::mm;
+  const double zBankFront = sampleDetectorDistance - banks.detectorSystemFrontDistanceFromBankFront(0) *Units::mm;
+
+  /////////////////////////////////////////////////////////////////////
+  //const double xWidthVacuumTankEnd = 790 *Units::mm;  //overestimated - vacuumtank end
+  //const double yHeightVacuumTankEnd = 700 *Units::mm; //overestimated - vacuumtank end
+  const double xWidthEmpiricalDetFront = 2*0.27 *Units::m; //illuminated area based on measured data
+  const double yHeightEmpiricalDetFront = 2*0.31 *Units::m; //illuminated area based on measured data
+  const double xWidthVacuumTankEnd = xWidthEmpiricalDetFront * (zVacuumTankEnd / sampleDetectorDistance);
+  const double yHeightVacuumTankEnd = yHeightEmpiricalDetFront * (zVacuumTankEnd / sampleDetectorDistance);
+
   const double xBankEnterLimit = (xWidthVacuumTankEnd * 0.5) * (zBankFront / zVacuumTankEnd);
-  std::cout<<"\n ***** \n xBankEnterLimit: " << xBankEnterLimit << "\n ****** \n";
+  const double yBankEnterLimit = (yHeightVacuumTankEnd * 0.5) * (zBankFront / zVacuumTankEnd);
+  const double yBeamOffset = 0.008 *Units::m; //empirical
+  //std::cout<<"\n ***** \n xBankEnterLimit: " << xBankEnterLimit << "\n yBankEnterLimit: "<< yBankEnterLimit<< "\n ****** \n";
+
+  double tmp_x_offset_meters = gen.hasParameterDouble("x_offset_meters") ? gen.getParameterDouble("x_offset_meters") *Units::m : 0.0;
+  double tmp_dx_meter = gen.hasParameterDouble("dx_meter") ? gen.getParameterDouble("dx_meter") *Units::m : 0.0;
+  if(tmp_x_offset_meters && tmp_dx_meter){
+    printf("Error: both 'x_offset_meters' and 'dx_meter' parameters are defined.\n");
+    return 1;
+  }
+  const double xBeamOffset = tmp_x_offset_meters ? tmp_x_offset_meters :tmp_dx_meter;
+
   while (dr.loopEvents()){
     while (auto trk_geantino = primary_geantinos.next()) {
       countTestGeantino += 1;
@@ -99,9 +122,12 @@ int main(int argc, char **argv)
         const double yBankEnter = stepFirstInBank->preGlobalY()/Units::mm;
         h_geantino_xy_bank->fill(-xBankEnter, yBankEnter, 1);
 
-        if (xBankEnterLimit < std::fabs(xBankEnter) /*|| yBankEnterLimit < std::fabs(yBankEnter)*/){
+        //if ( yBankEnterLimit < std::fabs(yBankEnter) ||
+        if ( yBankEnter > yBeamOffset + yBankEnterLimit || yBeamOffset - yBankEnterLimit > yBankEnter ||
+          xBankEnter > xBeamOffset + xBankEnterLimit || xBeamOffset - xBankEnterLimit > xBankEnter ){
           continue;
         }
+
         h_geantino_xy_bank_filtered->fill(-xBankEnter, yBankEnter, 1);
       }
 

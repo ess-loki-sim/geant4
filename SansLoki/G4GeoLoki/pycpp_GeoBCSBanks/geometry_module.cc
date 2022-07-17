@@ -54,6 +54,7 @@ GeoBCS::GeoBCS()
   // give the default value, the last 2 ones are optional (min, max)
 
   addParameterDouble("rear_detector_distance_m", 5.0, 4.0, 10.0);
+  addParameterInt("rear_bank_pixel_number", 256, 256, 4096);
   addParameterBoolean("rear_detector_only", false);
   addParameterBoolean("with_beamstop", false);
   addParameterBoolean("larmor_rear_bank_experiment", false);
@@ -362,8 +363,9 @@ G4VPhysicalVolume* GeoBCS::Construct(){
 
   auto world_material = getParameterMaterial("world_material"); 
   const double sdd = getParameterDouble("rear_detector_distance_m")*Units::m;
+  const int rearBankPixelNumber = getParameterInt("rear_bank_pixel_number");
 
-  banks = new bcsBanks(sdd);
+  banks = new bcsBanks(sdd,rearBankPixelNumber);
 
   // calculate a value that is big enough to fit your world volume, the "super mother"
   double big_dimension = 1.1*( 1 *Units::m + sdd);

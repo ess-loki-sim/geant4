@@ -1,6 +1,5 @@
 from __future__ import print_function
 import G4CustomPyGen
-import G4Interfaces
 import Core.Units as Units
 import Utils.NeutronMath
 import math
@@ -11,7 +10,6 @@ class FloodSourceGen(G4CustomPyGen.GenBase):
         self.addParameterDouble("neutron_wavelength_max_aangstrom", 13)
 
         self.addParameterDouble("source_sample_distance_meters", 25.61)
-        #self.addParameterDouble("source_monitor_distance_meters", 25.26)
         self.addParameterDouble("source_monitor_distance_meters", 25.57)
 
         #self.addParameterDouble("x_offset_meters", -0.040)

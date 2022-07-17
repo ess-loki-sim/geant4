@@ -70,7 +70,7 @@ double bcsBanks::strawLengthInBank[9] = { // all in mm
 
 int bcsBanks::numberOfPixels[9] = { // number of pixels along the straws
     //16384, // 0 - rear (used for CalibSlitSourceGen) 
-    512, // 0 - rear
+    256, // 0 - rear
     256,  // 1 - mid top
     256, // 2 - mid left
     256,  // 3 - mid bottom
