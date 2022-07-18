@@ -3,6 +3,9 @@
 \#*\#
 .\#*
 
+#for visual studio code
+.vscode
+
 #Also needed for vi:
 .*.sw?
 

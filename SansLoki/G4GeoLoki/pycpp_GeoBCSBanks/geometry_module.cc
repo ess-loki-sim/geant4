@@ -288,13 +288,13 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
     place(lv_pack_box, banks->getTopmostPackPositionInBank(bankId, 2), -(packNumber * pack_pack_distance - banks->getTopmostPackPositionInBank(bankId, 1)), banks->getTopmostPackPositionInBank(bankId, 0), lv_bank, G4Colour(0, 1, 1), -2, 0, new G4RotationMatrix(0, 0, packRotation));
   }
 
-  const int numberOfBoronMasks = banks->getNumberOfBoronMasks(bankId);
+  const int numberOfBoronMasks = banks->masks->getNumberOfBoronMasks(bankId);
   for (int maskId = 0; maskId < numberOfBoronMasks; ++maskId){
     const std::string maskName = "BoronMask-"+std::to_string(bankId)+"-"+std::to_string(maskId);
-    place(new G4Box(maskName, 0.5*banks->getBoronMaskSize(bankId, maskId, 2), 0.5*banks->getBoronMaskSize(bankId, maskId, 1), 0.5*banks->getBoronMaskSize(bankId, maskId, 0)),
+    place(new G4Box(maskName, 0.5*banks->masks->getSize(bankId, maskId, 2), 0.5*banks->masks->getSize(bankId, maskId, 1), 0.5*banks->masks->getSize(bankId, maskId, 0)),
             B4C_panel_material, 
             banks->getBoronMaskPosition(bankId, maskId, 2), banks->getBoronMaskPosition(bankId, maskId, 1), banks->getBoronMaskPosition(bankId, maskId, 0), 
-            lv_bank, BLACK, -2, 0, new G4RotationMatrix(0, 0, banks->getBoronMaskRotation(bankId, maskId)));
+            lv_bank, BLACK, -2, 0, new G4RotationMatrix(0, 0, banks->masks->getRotation(bankId, maskId)));
   }
 
   // Add BeamStop to the Rear Bank volume
@@ -329,13 +329,13 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
 
 G4LogicalVolume *GeoBCS::createTriangularMaskLV(int maskId){
     //creating special triangular volume by subtraction of 2 boxes
-    const double xHalf = banks->getTriangularBoronMaskParameter(maskId, 0) * Units::mm;
-    const double yHalf = banks->getTriangularBoronMaskParameter(maskId, 1) * Units::mm;
-    const double zHalf = banks->getTriangularBoronMaskParameter(maskId, 2) * Units::mm;
-    const double xSideToCut = 2 * xHalf - banks->getTriangularBoronMaskParameter(maskId, 3) * Units::mm;
-    const double ySideToCut = 2 * yHalf - banks->getTriangularBoronMaskParameter(maskId, 4) * Units::mm;
-    const double xCutDir = banks->getTriangularBoronMaskParameter(maskId, 5);
-    const double yCutDir = banks->getTriangularBoronMaskParameter(maskId, 6);
+    const double xHalf = banks->masks->getHalfSizeOfTriangularMask(maskId, 0);
+    const double yHalf = banks->masks->getHalfSizeOfTriangularMask(maskId, 1);
+    const double zHalf = banks->masks->getHalfSizeOfTriangularMask(maskId, 2);
+    const double xSideToCut = 2 * xHalf - banks->masks->getCutPointOfTriangularMask(maskId, 0);
+    const double ySideToCut = 2 * yHalf - banks->masks->getCutPointOfTriangularMask(maskId, 1);
+    const double xCutDir = banks->masks->getCutDirOfTriangularMask(maskId, 0);
+    const double yCutDir = banks->masks->getCutDirOfTriangularMask(maskId, 1);
 
     auto triangularMaskBox = new G4Box("TriangularMaskBox", xHalf, yHalf, zHalf);
     const double xCutHalf = sqrt(pow(ySideToCut, 2) + pow(xSideToCut, 2)) / 2;
@@ -348,7 +348,7 @@ G4LogicalVolume *GeoBCS::createTriangularMaskLV(int maskId){
     auto triangularMask = new G4SubtractionSolid("TriangularMask", triangularMaskBox, triangularMaskCut, cutRotationMatrix, cutCentre);
 
     auto B4C_panel_material = getParameterMaterial("B4C_panel_material");
-    const int bankId = banks->getTriangularBoronMaskParameter(maskId, 7);
+    const int bankId = banks->masks->getBankIdOfTriangularMask(maskId);
     const std::string maskName = "BoronMask-triangular-"+std::to_string(bankId)+"-"+std::to_string(maskId);
     auto lv_triangularMask = new G4LogicalVolume(triangularMask, B4C_panel_material, maskName);
 
@@ -423,8 +423,8 @@ G4VPhysicalVolume* GeoBCS::Construct(){
     for (int maskId = 0; maskId <= 3; maskId++) {
       auto lv_triangularMask = createTriangularMaskLV(maskId);
 
-      const int bankId = banks->getTriangularBoronMaskParameter(maskId, 7);       // 5 or 7
-      const double rotateDir = banks->getTriangularBoronMaskParameter(maskId, 6); // +- 1.0
+      const int bankId = banks->masks->getBankIdOfTriangularMask(maskId);       // 5 or 7
+      const double rotateDir = banks->masks->getCutDirOfTriangularMask(maskId, 1); // +- 1.0
 
       auto rotation = new G4RotationMatrix();
       rotation->rotateX(banks->getBankRotation(bankId, 2) * rotateDir);

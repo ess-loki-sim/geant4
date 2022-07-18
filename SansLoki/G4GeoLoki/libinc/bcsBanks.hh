@@ -3,6 +3,7 @@
 
 #include <string>
 #include <array>
+#include "G4GeoLoki/boronMasks.hh"
 
 class bcsBanks {
 public:
@@ -70,18 +71,15 @@ public:
   double getBankPosition(const int bankId, const int axisIndex) const; // 0 - x, 1 - y, 2 - z
   static double getBankSize(const int bankId, const int axisIndex); // 0 - x, 1 - y, 2 - z
 
-  static int getNumberOfBoronMasks(const int bankId);
-  static double getBoronMaskSize(const int bankId, const int maskId, const int axisIndex);
-  static double getBoronMaskPosition(const int bankId, const int maskId, const int axisIndex);
-  static double getBoronMaskRotation(const int bankId, const int maskId);
-  
-  static double getTriangularBoronMaskParameter(const int maskId, const int parameterIndex);
-  static double getTriangularBoronMaskPosition(const int maskId, const int axisIndex);
-
   static double detectorSystemFrontDistanceFromBankFront(const int bankId);
 
   static bool isVertical(const int bankId);
   static bool areTubesInverselyNumbered(const int bankId);
+
+  // boron masks
+  static boronMasks * masks;
+  static double getBoronMaskPosition(const int bankId, const int maskId, const int axisIndex);
+  static double getTriangularBoronMaskPosition(const int maskId, const int axisIndex);
 
   // analysis
   static int getTotalNumberOfPixels();
@@ -94,6 +92,7 @@ public:
 
 private:
   double rearBankDistance; //the only(?) non-static
+  
   static double pixelCentrePosition[3]; //used for masking
 
   /// straw ///
@@ -158,19 +157,6 @@ private:
   static double detectorSystemCentreDistanceFromBankTop(const int bankId);
   static double detectorSystemCentreOffsetInBank(const int bankId, const int axisIndex);
 
-  //boron masks
-
-  static std::array<std::array<double, 7>, 6> rearBoronMasks;
-  static std::array<std::array<double, 7>, 8> midVerticalBoronMasks;
-  static std::array<std::array<double, 7>, 8> midHorizontalBoronMasks;
-  static std::array<std::array<double, 7>, 8> frontTopBoronMasks;
-  static std::array<std::array<double, 7>, 8> frontBottomBoronMasks; 
-  static std::array<std::array<double, 7>, 8> frontVerticalBoronMasks;
-
-  static std::array<std::array<double, 10>, 4> triangularBoronMasks;
-
-  static double boronMaskParameter(const int bankId, const int maskId, const int parameterIndex);
-  
   // analysis
   static int numberOfPixels[9];
   static int getBankPixelOffset(const int bankId);
