@@ -75,12 +75,12 @@ GeoBCS::GeoBCS()
 }
 
 G4LogicalVolume * GeoBCS::createTubeLV(double converterThickness, double strawLength){
-  const double tubeOuterRadius = banks->getTubeOuterRadius();
-  const double tubeInnerRadius = banks->getTubeInnerRadius();
+  const double tubeOuterRadius = banks->tubes->getTubeOuterRadius();
+  const double tubeInnerRadius = banks->tubes->getTubeInnerRadius();
 
-  const double strawOuterRadius = banks->getStrawOuterRadius();
-  const double strawInnerRadius = banks->getStrawInnerRadius();
-  const double strawWallThickness = banks->getStrawWallThickness();
+  const double strawOuterRadius = banks->tubes->getStrawOuterRadius();
+  const double strawInnerRadius = banks->tubes->getStrawInnerRadius();
+  const double strawWallThickness = banks->tubes->getStrawWallThickness();
   const double effectiveStrawLength = strawLength - strawWallThickness; //This is only epsilon difference...
 
   auto tubeWallMaterial = getParameterMaterial("tube_wall_material");
@@ -100,7 +100,7 @@ G4LogicalVolume * GeoBCS::createTubeLV(double converterThickness, double strawLe
   
   for (int cpNo = 0; cpNo <= 6; cpNo++){
     auto lv_straw_wall = place(new G4Tubs("StrawWall", 0, strawOuterRadius, 0.5 * strawLength, 0., 2 * M_PI),
-                               strawWallMaterial, banks->getStrawPositionX(cpNo), banks->getStrawPositionY(cpNo), 0, lv_empty_tube, ORANGE, cpNo, 0, 0).logvol;
+                               strawWallMaterial, banks->tubes->getStrawPositionX(cpNo), banks->tubes->getStrawPositionY(cpNo), 0, lv_empty_tube, ORANGE, cpNo, 0, 0).logvol;
 
     auto lv_converter = place(new G4Tubs("Converter", 0., strawInnerRadius, 0.5*effectiveStrawLength, 0., 2 * M_PI),
                               converterMaterial, 0, 0, 0, lv_straw_wall, G4Colour(0, 1, 1), cpNo + 100, 0, 0).logvol;
@@ -155,8 +155,8 @@ G4LogicalVolume *GeoBCS::createPackBoxLV(double strawLength, int packNumber, int
 
   auto lv_pack_box = new G4LogicalVolume(new G4Box("EmptyPackBox", 0.5*banks->getPackBoxWidth(), packBoxHeightHalf, 0.5 * strawLength + idleLengthOnOneEnd), pack_fill_material, "EmptyPackBox");
 
-  auto lv_front_tube = createTubeLV(banks->getFrontTubeConverterThickness(), strawLength); 
-  auto lv_back_tube = createTubeLV(banks->getBackTubeConverterThickness(), strawLength); 
+  auto lv_front_tube = createTubeLV(banks->tubes->getFrontTubeConverterThickness(), strawLength); 
+  auto lv_back_tube = createTubeLV(banks->tubes->getBackTubeConverterThickness(), strawLength); 
 
   place(lv_front_tube, horizontalOffset + topRowOffset, verticalOffset, 0, lv_pack_box, SILVER, getTubeNumber(packNumber, 0,numberOfPacksForInvertedNumbering, numberOfPacks), 0, tubeRotationMatrix);
   place(lv_front_tube, horizontalOffset + topRowOffset + horizontalTubeDistance, verticalOffset, 0, lv_pack_box, SILVER, getTubeNumber(packNumber, 1,numberOfPacksForInvertedNumbering, numberOfPacks), 0, tubeRotationMatrix);

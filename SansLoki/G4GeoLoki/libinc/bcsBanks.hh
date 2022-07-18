@@ -3,7 +3,9 @@
 
 #include <string>
 #include <array>
+//#include "G4GeoLoki/bcsPack.hh"
 #include "G4GeoLoki/boronMasks.hh"
+#include "G4GeoLoki/bcsTube.hh"
 
 class bcsBanks {
 public:
@@ -15,19 +17,7 @@ public:
     numberOfPixels[0] = rearBankPixelNumber;
   }
 
-  /// straw ///
-  double getStrawOuterRadius() const;
-  double getStrawInnerRadius() const;
-  double getStrawWallThickness() const;
-  double getFrontTubeConverterThickness() const;
-  double getBackTubeConverterThickness() const;
-
-  /// tube ///
-  double getTubeOuterRadius() const;
-  double getTubeInnerRadius() const;
-  double getStrawPositionX(const int strawId) const;
-  double getStrawPositionY(const int strawId) const;
-  //std::string getTubeWallMaterial() const;
+  static bcsTube * tubes;
 
   /// tube grid - pack ///
   double getHorizontalTubeDistanceInPack() const;
@@ -94,20 +84,6 @@ private:
   double rearBankDistance; //the only(?) non-static
   
   static double pixelCentrePosition[3]; //used for masking
-
-  /// straw ///
-  static double strawOuterRadius;
-  static double strawWallThickness; 
-  static double frontTubeConverterThickness;
-  static double backTubeConverterThickness;
-
-  /// tube ///
-  static double tubeOuterRadius;
-  static double tubeWallThickness;
-  static double strawPositionsInTube[7][2];
-  static double strawStrawDistance;
-  //static std::string tubeWallMaterial;
-  
 
   /// tube grid - pack ///
   static double tubeGridParallelogramBase;

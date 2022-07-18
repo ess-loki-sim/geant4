@@ -73,7 +73,7 @@ int main(int argc, char**argv) {
 
   bcsBanks banks = bcsBanks(sampleDetectorDistance, rearBankPixelNumber);
 
-  const double tubeRadius = banks.getTubeOuterRadius(); //12.7; 
+  const double tubeRadius = banks.tubes->getTubeOuterRadius(); //12.7; 
 
   const double ymin = -53; //20+1 tube in negative direction
   const int binsy = 1060/2;

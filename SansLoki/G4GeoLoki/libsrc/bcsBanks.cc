@@ -1,32 +1,9 @@
+
 #include "G4GeoLoki/bcsBanks.hh"
 #include "Core/Units.hh"
 #include <cmath>
 #include <iostream>
 #include <array>
-
-/// straw ///
-double bcsBanks::strawOuterRadius = 3.75 *Units::mm;
-double bcsBanks::strawWallThickness = 0.0254 *Units::mm; //0.001 inch
-
-double bcsBanks::frontTubeConverterThickness = 0.65 *Units::um;
-double bcsBanks::backTubeConverterThickness = 1.00 *Units::um;
-
-/// tube ///
-double bcsBanks::tubeOuterRadius = 12.7 *Units::mm; // 1 inch diameter
-double bcsBanks::tubeWallThickness = 0.889 *Units::mm; //0.035 inch  //0.94 
-double bcsBanks::strawStrawDistance = 7.75 *Units::mm; // 
-
-//std::string bcsBanks::tubeWallMaterial = "NCrystal:cfg=Al_sg225.ncmat";
-
-double bcsBanks::strawPositionsInTube[7][2] = { //TODO reorder to change volume numbering
-    { -0.5*strawStrawDistance * tan(M_PI/3.), -0.5*strawStrawDistance }, //20
-    { 0, -strawStrawDistance }, //0
-    { 0.5*strawStrawDistance * tan(M_PI/3.), -0.5*strawStrawDistance }, //10
-    { 0, 0},  //30
-    { -0.5*strawStrawDistance * tan(M_PI/3.), 0.5*strawStrawDistance }, //50
-    { 0, strawStrawDistance}, //60
-    { 0.5*strawStrawDistance * tan(M_PI/3.), 0.5*strawStrawDistance }, //40
-  };
 
 /// tube grid  ///
 double bcsBanks::tubeGridParallelogramBase = 27.00 *Units::mm;
@@ -205,46 +182,6 @@ double bcsBanks::topmostPackHolderPositionInBankFromTopFront[9][2] = { // y (hei
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-/// straw ///
-double bcsBanks::getStrawOuterRadius() const{
-  return strawOuterRadius;
-}
-double bcsBanks::getStrawInnerRadius() const{
-  return strawOuterRadius - strawWallThickness;
-}
-double bcsBanks::getStrawWallThickness() const{
-  return strawWallThickness;
-}
-double bcsBanks::getFrontTubeConverterThickness() const{
-  return frontTubeConverterThickness;
-}
-double bcsBanks::getBackTubeConverterThickness() const{
-  return backTubeConverterThickness;
-}
-
-  
-
-/// tube ///
-double bcsBanks::getTubeOuterRadius() const { 
-  return tubeOuterRadius; 
-  }
-double bcsBanks::getTubeInnerRadius() const { 
-  return tubeOuterRadius - tubeWallThickness; 
-  }
-//std::string bcsBanks::getTubeWallMaterial() const { 
-//  return tubeWallMaterial; 
-//  }
-
-  
-
-double bcsBanks::getStrawPositionX(const int strawId) const { 
-  return strawPositionsInTube[strawId][0]; 
-}
-double bcsBanks::getStrawPositionY(const int strawId) const { 
-  return strawPositionsInTube[strawId][1]; 
-}
-
 /// tube grid  ///
 double bcsBanks::getHorizontalTubeDistanceInPack() const { 
   return tubeGridParallelogramBase; 
@@ -400,7 +337,7 @@ double bcsBanks::detectorSystemFrontDistanceFromBankFront(const int bankId) {
   const double packHolderPositionZFromBankFront = topmostPackHolderPositionInBankFromTopFront[bankId][1];
   const double positionOfFirstTubeCentreFromPackHolderZ = packHolderToFirstTubeCentreCoordsInPack(2) *std::cos(tubeGridParallelogramAngle) + packHolderToFirstTubeCentreCoordsInPack(1) *std::sin(tubeGridParallelogramAngle);
 
-  return packHolderPositionZFromBankFront + positionOfFirstTubeCentreFromPackHolderZ - tubeOuterRadius;
+  return packHolderPositionZFromBankFront + positionOfFirstTubeCentreFromPackHolderZ - tubes->getTubeOuterRadius();
 }
 
 double bcsBanks::detectorSystemCentreDistanceFromBankTop(const int bankId) {
@@ -551,8 +488,8 @@ void bcsBanks::calcPixelCentrePositionForMasking(const int pixelId) {
   positionZ = - 0.5* strawLengthInBank[bankId] + (locPixelId + 0.5) * pixelLength;
 
   ///////// straw in tube /////////
-  double positionX = getStrawPositionX(strawId);
-  double positionY = getStrawPositionY(strawId);
+  double positionX = tubes->getStrawPositionX(strawId);
+  double positionY = tubes->getStrawPositionY(strawId);
 
   ///////// tube in pack ///////// 
   const double tubeRotation = getTubeRotation();
