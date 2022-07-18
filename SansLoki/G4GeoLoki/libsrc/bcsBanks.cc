@@ -5,32 +5,8 @@
 #include <iostream>
 #include <array>
 
-/// tube grid  ///
-double bcsBanks::tubeGridParallelogramBase = 27.00 *Units::mm;
-double bcsBanks::tubeGridParallelogramSide = 28.40 *Units::mm;
-double bcsBanks::tubeGridParallelogramAngle = 13.45 *Units::degree; // 90-76.55=13.45
-
-double bcsBanks::tubeRotationAngle = (8.45-30) *Units::degree; //8.45 degree should be the final roataion after the pack is rotated, pack rotation must be subtracted // -30 degree needed because of different default positioning;
-
-
-double bcsBanks::packBoxWidth = 265.7 *Units::mm; //excluding the handle
-double bcsBanks::packBoxHeight = 55.20 *Units::mm;
-double bcsBanks::packBoxIdleLengthOnOneEnd = 111.50 *Units::mm;
-double bcsBanks::tubeCentreDistanceFromPackFront = 36.50 *Units::mm;
-
 double bcsBanks::packHolderDistanceFromPackTop = 7.6 *Units::mm;
 double bcsBanks::packHolderDistanceFromPackFront = 7.5 *Units::mm;
-
-double bcsBanks::B4CLengthOverStrawOnOneEnd = 12.0 *Units::mm;
-double bcsBanks::B4CDistanceFromLastTubeCentre = 23.0 *Units::mm;
-
-double bcsBanks::B4CMainPartHeight = 51.20 *Units::mm;
-double bcsBanks::B4CPanelThickness = 5.0 *Units::mm;
-double bcsBanks::B4CMiddlePartHeight = 5.00 *Units::mm;
-double bcsBanks::B4CMiddlePartThickness = 10.80 *Units::mm;
-double bcsBanks::B4CBottomPartHeight = 3.20 *Units::mm;
-double bcsBanks::B4CBottomPartThickness = 3.00 *Units::mm;
-
 
 /// bank ///
 double bcsBanks::strawLengthInBank[9] = { // all in mm
@@ -182,87 +158,12 @@ double bcsBanks::topmostPackHolderPositionInBankFromTopFront[9][2] = { // y (hei
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// tube grid  ///
-double bcsBanks::getHorizontalTubeDistanceInPack() const { 
-  return tubeGridParallelogramBase; 
-}
-double bcsBanks::getVerticalTubeDistanceInPack() {  //28.40*cos(13.45 degree)=27.62
-  return tubeGridParallelogramSide * std::cos(tubeGridParallelogramAngle); 
-}
-double bcsBanks::getPackRotation() const {
-  return tubeGridParallelogramAngle; 
-}
-double bcsBanks::getTubeRotation() const { //compensated for the rotation of the packs 
-  return tubeRotationAngle - tubeGridParallelogramAngle; 
-}
-
-double bcsBanks::getB4CMainPartHeight() { 
-  return B4CMainPartHeight;
-}
-double bcsBanks::getB4CMainPartHorizontalOffset() { 
-  return getHorizontalTubeCentreOffsetInPack() + 3.0* tubeGridParallelogramBase + B4CDistanceFromLastTubeCentre + 0.5* B4CPanelThickness;
-}
-double bcsBanks::getB4CMainPartVerticalOffset() { 
-  return 0.5*B4CBottomPartHeight;
-}
-
-double bcsBanks::getB4CMiddlePartThickness() { 
-  return B4CMiddlePartThickness;
-}
-double bcsBanks::getB4CMiddlePartHeight() { 
-  return B4CMiddlePartHeight;
-}
-double bcsBanks::getB4CMiddlePartHorizontalOffset() { 
-  return getB4CMainPartHorizontalOffset() - 0.5* B4CPanelThickness - 0.5* B4CMiddlePartThickness;
-}
-double bcsBanks::getB4CMiddlePartVerticalOffset() { 
-  return getB4CMainPartVerticalOffset() - 0.5* B4CMainPartHeight + 0.5* B4CMiddlePartHeight;
-}
-
-double bcsBanks::getB4CBottomPartThickness() { 
-  return B4CBottomPartThickness;
-}
-double bcsBanks::getB4CBottomPartHeight() { 
-  return B4CBottomPartHeight;
-}
-double bcsBanks::getB4CBottomPartHorizontalOffset() { 
-  return getB4CMiddlePartHorizontalOffset() - 0.5* B4CMiddlePartThickness + 0.5* B4CBottomPartThickness;
-}
-double bcsBanks::getB4CBottomPartVerticalOffset() { 
-  return getB4CMiddlePartVerticalOffset() - 0.5* B4CMiddlePartHeight - 0.5* B4CBottomPartHeight;
-}
-
-double bcsBanks::getTopRowOffsetInPack() const { 
-  return tubeGridParallelogramSide * std::sin(tubeGridParallelogramAngle); 
-}
-
-double bcsBanks::getHorizontalTubeCentreOffsetInPack() { 
-  return -0.5*packBoxWidth + tubeCentreDistanceFromPackFront;
-}
-
-double bcsBanks::getVerticalTubeCentreOffsetInPack() {  //TODO
-  return 0.5 * getVerticalTubeDistanceInPack(); 
-}
+ double bcsBanks::getPackRotation() {
+   return packs->getTubeGridParallelogramAngle(); 
+ }
 
 double bcsBanks::getPackPackDistance() const { 
-  return tubeGridParallelogramSide * 2; 
-}
-
-double bcsBanks::getPackBoxWidth() const {
-  return packBoxWidth;
-}
-double bcsBanks::getPackBoxHeight() const {
-  return packBoxHeight;
-}
-double bcsBanks::getPackBoxIdleLengthOnOneEnd() const {
-  return packBoxIdleLengthOnOneEnd;
-}
-
-double bcsBanks::getB4CPanelThickness() const { 
-  return B4CPanelThickness; 
-}
-double bcsBanks::getB4CLengthOverStrawOnOneEnd() const { 
-  return B4CLengthOverStrawOnOneEnd; 
+  return packs->getTubeGridParallelogramSide() * 2; 
 }
 
 
@@ -296,10 +197,10 @@ double bcsBanks::getBankSize(const int bankId, const int axisIndex) {
 
 double bcsBanks::packHolderToPackCentreCoordsInPack(const int axisIndex) {
   if(axisIndex == 1) { //y
-    return 0.5*packBoxHeight - packHolderDistanceFromPackTop;
+    return 0.5*packs->getPackBoxHeight() - packHolderDistanceFromPackTop;
   }
   else {//z
-    return 0.5*packBoxWidth - packHolderDistanceFromPackFront;
+    return 0.5*packs->getPackBoxWidth() - packHolderDistanceFromPackFront;
   }
 }
 
@@ -311,7 +212,7 @@ double bcsBanks::getTopmostPackPositionInBank(const int bankId, const int axisIn
   const double packHolderPositionYFromBankTop = topmostPackHolderPositionInBankFromTopFront[bankId][0];
   const double packHolderPositionY = 0.5* getBankSize(bankId, 1)  - packHolderPositionYFromBankTop;
   
-  const double positionOfPackCentreFromPackHolderY = packHolderToPackCentreCoordsInPack(2) *std::sin(tubeGridParallelogramAngle) - packHolderToPackCentreCoordsInPack(1) *std::cos(tubeGridParallelogramAngle);
+  const double positionOfPackCentreFromPackHolderY = packHolderToPackCentreCoordsInPack(2) *std::sin(getPackRotation()) - packHolderToPackCentreCoordsInPack(1) *std::cos(getPackRotation());
 
   return packHolderPositionY + positionOfPackCentreFromPackHolderY;
   }
@@ -319,23 +220,23 @@ double bcsBanks::getTopmostPackPositionInBank(const int bankId, const int axisIn
   const double packHolderPositionZFromBankFront = topmostPackHolderPositionInBankFromTopFront[bankId][1];
   const double packHolderPositionZ = - (0.5*getBankSize(bankId, 2) - packHolderPositionZFromBankFront);
 
-  const double positionOfPackCentreFromPackHolderZ = packHolderToPackCentreCoordsInPack(2) *std::cos(tubeGridParallelogramAngle) + packHolderToPackCentreCoordsInPack(1) *std::sin(tubeGridParallelogramAngle);
+  const double positionOfPackCentreFromPackHolderZ = packHolderToPackCentreCoordsInPack(2) *std::cos(getPackRotation()) + packHolderToPackCentreCoordsInPack(1) *std::sin(getPackRotation());
   return packHolderPositionZ + positionOfPackCentreFromPackHolderZ;
   }
 }
 
 double bcsBanks::packHolderToFirstTubeCentreCoordsInPack(const int axisIndex) {
   if(axisIndex == 1) { //y
-    return 0.5*packBoxHeight + getVerticalTubeCentreOffsetInPack() - packHolderDistanceFromPackTop;
+    return 0.5*packs->getPackBoxHeight() + packs->getVerticalTubeCentreOffsetInPack() - packHolderDistanceFromPackTop;
   }
   else {//z
-    return tubeCentreDistanceFromPackFront - packHolderDistanceFromPackFront;
+    return packs->getTubeCentreDistanceFromPackFront() - packHolderDistanceFromPackFront;
   }
 }
 
 double bcsBanks::detectorSystemFrontDistanceFromBankFront(const int bankId) {  
   const double packHolderPositionZFromBankFront = topmostPackHolderPositionInBankFromTopFront[bankId][1];
-  const double positionOfFirstTubeCentreFromPackHolderZ = packHolderToFirstTubeCentreCoordsInPack(2) *std::cos(tubeGridParallelogramAngle) + packHolderToFirstTubeCentreCoordsInPack(1) *std::sin(tubeGridParallelogramAngle);
+  const double positionOfFirstTubeCentreFromPackHolderZ = packHolderToFirstTubeCentreCoordsInPack(2) *std::cos(getPackRotation()) + packHolderToFirstTubeCentreCoordsInPack(1) *std::sin(getPackRotation());
 
   return packHolderPositionZFromBankFront + positionOfFirstTubeCentreFromPackHolderZ - tubes->getTubeOuterRadius();
 }
@@ -343,9 +244,9 @@ double bcsBanks::detectorSystemFrontDistanceFromBankFront(const int bankId) {
 double bcsBanks::detectorSystemCentreDistanceFromBankTop(const int bankId) {
   const double packHolderDistanceYFromBankTop = topmostPackHolderPositionInBankFromTopFront[bankId][0];
 
-  const double distanceOfSecondRowTubeCentreFromPackHolderY = std::abs(packHolderToFirstTubeCentreCoordsInPack(2) * std::sin(tubeGridParallelogramAngle) - packHolderToFirstTubeCentreCoordsInPack(1) * std::cos(tubeGridParallelogramAngle));
-  const double distanceOfFirstRowTubeCentreFromPackHolderY = distanceOfSecondRowTubeCentreFromPackHolderY - tubeGridParallelogramSide;
-  const double detectorSystemSizeY = (numberOfPacksInBank[bankId] * 2 - 1) * tubeGridParallelogramSide; // from top row centre to lowest row centre
+  const double distanceOfSecondRowTubeCentreFromPackHolderY = std::abs(packHolderToFirstTubeCentreCoordsInPack(2) * std::sin(getPackRotation()) - packHolderToFirstTubeCentreCoordsInPack(1) * std::cos(getPackRotation()));
+  const double distanceOfFirstRowTubeCentreFromPackHolderY = distanceOfSecondRowTubeCentreFromPackHolderY - packs->getTubeGridParallelogramSide();
+  const double detectorSystemSizeY = (numberOfPacksInBank[bankId] * 2 - 1) * packs->getTubeGridParallelogramSide(); // from top row centre to lowest row centre
   
   const double distanceOfDetectorSystemCentreFromPackHolderY = distanceOfFirstRowTubeCentreFromPackHolderY + 0.5 * detectorSystemSizeY;
 
@@ -492,16 +393,16 @@ void bcsBanks::calcPixelCentrePositionForMasking(const int pixelId) {
   double positionY = tubes->getStrawPositionY(strawId);
 
   ///////// tube in pack ///////// 
-  const double tubeRotation = getTubeRotation();
-  const double horizontalOffset = getHorizontalTubeCentreOffsetInPack();
+  const double tubeRotation = packs->getTubeRotation();
+  const double horizontalOffset = packs->getHorizontalTubeCentreOffsetInPack();
   const int numberOfPacks = getNumberOfPacksByBankId(bankId);
   const int newTubeIdConvertedToOldId = ((tubeId % 2) * 4) + ((int) tubeId / (numberOfPacks * 2));
   const int inPackTubeId = isNewPixelNumbering ? 
                            areTubesInverselyNumbered(bankId) ? (newTubeIdConvertedToOldId + 4) % 8 : newTubeIdConvertedToOldId % 8 :
                            areTubesInverselyNumbered(bankId) ? (tubeId + 4) % 8 : tubeId % 8;
-  const double horizontalTubeDistance = getHorizontalTubeDistanceInPack();
-  const double topRowOffset = getTopRowOffsetInPack();  
-  const double verticalOffset = getVerticalTubeCentreOffsetInPack(); 
+  const double horizontalTubeDistance = packs->getHorizontalTubeDistanceInPack();
+  const double topRowOffset = packs->getTopRowOffsetInPack();  
+  const double verticalOffset = packs->getVerticalTubeCentreOffsetInPack(); 
   
   // apply tube rotation
   coordinateRotation(positionX, positionY, tubeRotation);

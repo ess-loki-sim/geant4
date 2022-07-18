@@ -121,18 +121,18 @@ G4LogicalVolume *GeoBCS::createPackBoxLV(double strawLength, int packNumber, int
   auto B4C_panel_material = getParameterMaterial("B4C_panel_material");
   auto Al_panel_material = getParameterMaterial("tube_wall_material"); //TODO check if the matterial is the same
 
-  const double packBoxHeightHalf = 0.5 * banks->getPackBoxHeight();
-  const double horizontalTubeDistance = banks->getHorizontalTubeDistanceInPack();
-  const double idleLengthOnOneEnd = banks->getPackBoxIdleLengthOnOneEnd();
+  const double packBoxHeightHalf = 0.5 * banks->packs->getPackBoxHeight();
+  const double horizontalTubeDistance = banks->packs->getHorizontalTubeDistanceInPack();
+  const double idleLengthOnOneEnd = banks->packs->getPackBoxIdleLengthOnOneEnd();
 
-  const double horizontalOffset = banks->getHorizontalTubeCentreOffsetInPack();
-  const double verticalOffset = banks->getVerticalTubeCentreOffsetInPack();
+  const double horizontalOffset = banks->packs->getHorizontalTubeCentreOffsetInPack();
+  const double verticalOffset = banks->packs->getVerticalTubeCentreOffsetInPack();
 
-  G4RotationMatrix* tubeRotationMatrix = new G4RotationMatrix(0, 0, banks->getTubeRotation());
+  G4RotationMatrix* tubeRotationMatrix = new G4RotationMatrix(0, 0, banks->packs->getTubeRotation());
 
-  const double topRowOffset = banks->getTopRowOffsetInPack(); /// offset by 28.4sin(13.45)
+  const double topRowOffset = banks->packs->getTopRowOffsetInPack(); /// offset by 28.4sin(13.45)
 
-    auto lv_pack_box = new G4LogicalVolume(new G4Box("EmptyPackBox", 0.5*banks->getPackBoxWidth(), packBoxHeightHalf, 0.5 * strawLength + idleLengthOnOneEnd), pack_fill_material, "EmptyPackBox");
+    auto lv_pack_box = new G4LogicalVolume(new G4Box("EmptyPackBox", 0.5*banks->packs->getPackBoxWidth(), packBoxHeightHalf, 0.5 * strawLength + idleLengthOnOneEnd), pack_fill_material, "EmptyPackBox");
 
   double frontB4CThickness = 0.65 *Units::um;
   double backB4CThickness = packNumber != 3 ? 1.00 *Units::um : 0.65 *Units::um;
@@ -152,21 +152,21 @@ G4LogicalVolume *GeoBCS::createPackBoxLV(double strawLength, int packNumber, int
 
 
   /// Add B4C panel in 3 parts //
-  const double B4CLengthHalf = 0.5*strawLength + banks->getB4CLengthOverStrawOnOneEnd();
-  const double B4CMainThicknessHalf = 0.5*banks->getB4CPanelThickness();
-  const double B4CMainPartHeightHalf = 0.5*banks->getB4CMainPartHeight();
-  const double B4CMainPartHorizontalOffset = banks->getB4CMainPartHorizontalOffset();
-  const double B4CMainPartVerticalOffset = banks->getB4CMainPartVerticalOffset();
+  const double B4CLengthHalf = 0.5*strawLength + banks->packs->getB4CLengthOverStrawOnOneEnd();
+  const double B4CMainThicknessHalf = 0.5*banks->packs->getB4CPanelThickness();
+  const double B4CMainPartHeightHalf = 0.5*banks->packs->getB4CMainPartHeight();
+  const double B4CMainPartHorizontalOffset = banks->packs->getB4CMainPartHorizontalOffset();
+  const double B4CMainPartVerticalOffset = banks->packs->getB4CMainPartVerticalOffset();
 
-  const double B4CMiddlePartThicknessHalf = 0.5*banks->getB4CMiddlePartThickness();
-  const double B4CMiddlePartHeightHalf = 0.5*banks->getB4CMiddlePartHeight();
-  const double B4CMiddlePartHorizontalOffset = banks->getB4CMiddlePartHorizontalOffset();
-  const double B4CMiddlePartVerticalOffset = banks->getB4CMiddlePartVerticalOffset();
+  const double B4CMiddlePartThicknessHalf = 0.5*banks->packs->getB4CMiddlePartThickness();
+  const double B4CMiddlePartHeightHalf = 0.5*banks->packs->getB4CMiddlePartHeight();
+  const double B4CMiddlePartHorizontalOffset = banks->packs->getB4CMiddlePartHorizontalOffset();
+  const double B4CMiddlePartVerticalOffset = banks->packs->getB4CMiddlePartVerticalOffset();
 
-  const double B4CBottomPartThicknessHalf = 0.5*banks->getB4CBottomPartThickness();
-  const double B4CBottomPartHeightHalf = 0.5*banks->getB4CBottomPartHeight();
-  const double B4CBottomPartHorizontalOffset = banks->getB4CBottomPartHorizontalOffset();
-  const double B4CBottomPartVerticalOffset = banks->getB4CBottomPartVerticalOffset();
+  const double B4CBottomPartThicknessHalf = 0.5*banks->packs->getB4CBottomPartThickness();
+  const double B4CBottomPartHeightHalf = 0.5*banks->packs->getB4CBottomPartHeight();
+  const double B4CBottomPartHorizontalOffset = banks->packs->getB4CBottomPartHorizontalOffset();
+  const double B4CBottomPartVerticalOffset = banks->packs->getB4CBottomPartVerticalOffset();
 
   auto lv_B4C_main_part = new G4LogicalVolume(new G4Box("B4CPanel", B4CMainThicknessHalf, B4CMainPartHeightHalf, B4CLengthHalf), B4C_panel_material, "B4CPanel");
   auto lv_B4C_middle_part = new G4LogicalVolume(new G4Box("B4CPanel", B4CMiddlePartThicknessHalf, B4CMiddlePartHeightHalf, B4CLengthHalf), B4C_panel_material, "B4CPanel");

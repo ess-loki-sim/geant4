@@ -3,9 +3,9 @@
 
 #include <string>
 #include <array>
-//#include "G4GeoLoki/bcsPack.hh"
-#include "G4GeoLoki/boronMasks.hh"
 #include "G4GeoLoki/bcsTube.hh"
+#include "G4GeoLoki/bcsPack.hh"
+#include "G4GeoLoki/boronMasks.hh"
 
 class bcsBanks {
 public:
@@ -17,42 +17,14 @@ public:
     numberOfPixels[0] = rearBankPixelNumber;
   }
 
-  static bcsTube * tubes;
-
-  /// tube grid - pack ///
-  double getHorizontalTubeDistanceInPack() const;
-  static double getVerticalTubeDistanceInPack();
-  double getPackRotation() const;
-  double getTubeRotation() const;
-
-  double getTopRowOffsetInPack() const;
-  static double getHorizontalTubeCentreOffsetInPack();
-  static double getVerticalTubeCentreOffsetInPack();
-  double getPackPackDistance() const;// TODO better name?
-
-  double getPackBoxWidth() const;
-  double getPackBoxHeight() const;
-  double getPackBoxIdleLengthOnOneEnd() const;
-
-  double getB4CPanelThickness() const;
-  double getB4CLengthOverStrawOnOneEnd() const;
-  static double getB4CMainPartHeight();
-  static double getB4CMainPartHorizontalOffset();
-  static double getB4CMainPartVerticalOffset();
-
-  static double getB4CMiddlePartThickness();  
-  static double getB4CMiddlePartHeight();  
-  static double getB4CMiddlePartHorizontalOffset();
-  static double getB4CMiddlePartVerticalOffset();
-
-  static double getB4CBottomPartThickness();  
-  static double getB4CBottomPartHeight();  
-  static double getB4CBottomPartHorizontalOffset();
-  static double getB4CBottomPartVerticalOffset();
-
-  static double getTopmostPackPositionInBank(const int bankId, const int axisIndex); // 0 - x, 1 - y, 2 - z
+  static bcsTube* tubes;
+  static bcsPack* packs;
 
   /// bank ///
+  static double getPackRotation();
+  double getPackPackDistance() const;// TODO better name?
+  static double getTopmostPackPositionInBank(const int bankId, const int axisIndex); // 0 - x, 1 - y, 2 - z
+
   double getStrawLengthByBankId(const int bankId) const;
   int getNumberOfPacksByBankId(const int bankId) const; 
   static int getNumberOfTubes(const int bankId); 
@@ -85,30 +57,8 @@ private:
   
   static double pixelCentrePosition[3]; //used for masking
 
-  /// tube grid - pack ///
-  static double tubeGridParallelogramBase;
-  static double tubeGridParallelogramSide;
-  static double tubeGridParallelogramAngle;
-
-  static double tubeRotationAngle;
-  
-  static double packBoxWidth;
-  static double packBoxHeight;
-  static double packBoxIdleLengthOnOneEnd;
-  static double tubeCentreDistanceFromPackFront; //1st lower (closest) tube 
-
   static double packHolderDistanceFromPackTop;
   static double packHolderDistanceFromPackFront;
-
-  static double B4CLengthOverStrawOnOneEnd;
-  static double B4CDistanceFromLastTubeCentre;
-
-  static double B4CMainPartHeight;
-  static double B4CPanelThickness;
-  static double B4CMiddlePartHeight;
-  static double B4CMiddlePartThickness;
-  static double B4CBottomPartHeight;
-  static double B4CBottomPartThickness;
 
   /// bank //
   static double strawLengthInBank[9];
