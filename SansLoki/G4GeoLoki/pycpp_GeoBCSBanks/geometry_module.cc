@@ -59,9 +59,7 @@ GeoBCS::GeoBCS()
   addParameterBoolean("larmor_rear_bank_experiment", false);
   addParameterBoolean("with_calibration_slits", false);
   
-  addParameterBoolean("old_pixel_numbering", false);
-
-  addParameterInt("number_of_pixels", 1); //physically segmentig the gas volume. Not used currently
+  addParameterBoolean("old_tube_numbering", false);
   
   addParameterString("world_material","G4_Vacuum");
   addParameterString("pack_box_fill_material", "G4_Vacuum");
@@ -88,9 +86,6 @@ G4LogicalVolume * GeoBCS::createTubeLV(double converterThickness, double strawLe
   auto counting_gas = getParameterMaterial("counting_gas");
   auto converterMaterial = getParameterMaterial("converter_material");
 
-  const int pixelNumber = getParameterInt("number_of_pixels");
-  const double pixelLength = effectiveStrawLength / pixelNumber;
-
   auto lv_tube = new G4LogicalVolume(new G4Tubs("TubeWall",0, tubeOuterRadius, 0.5*strawLength, 0., 2*M_PI),
                                      tubeWallMaterial, "TubeWall");
 
@@ -104,17 +99,15 @@ G4LogicalVolume * GeoBCS::createTubeLV(double converterThickness, double strawLe
     auto lv_converter = place(new G4Tubs("Converter", 0., strawInnerRadius, 0.5*effectiveStrawLength, 0., 2 * M_PI),
                               converterMaterial, 0, 0, 0, lv_straw_wall, G4Colour(0, 1, 1), cpNo + 100, 0, 0).logvol;
 
-    for (int i = 0; i < pixelNumber; i++){
-      place(new G4Tubs("CountingGas", 0., strawInnerRadius - converterThickness, 0.5 * pixelLength, 0., 2 * M_PI),
-            counting_gas, 0, 0, -(i * pixelLength + 0.5 * pixelLength - 0.5*effectiveStrawLength), lv_converter, G4Colour(0, 0, 1), i, 0, 0);
-    }
+    place(new G4Tubs("CountingGas", 0., strawInnerRadius - converterThickness, 0.5 * effectiveStrawLength, 0., 2 * M_PI),
+          counting_gas, 0, 0, 0, lv_converter, G4Colour(0, 0, 1), 0, 0, 0);
   }
   return lv_tube;
 }
 
 int GeoBCS::getTubeNumber(double rowNumber, int localIndex, int numberOfPacksForInvertedNumbering, int numberOfPacks){
-  const bool oldPixelNumbering = getParameterBoolean("old_pixel_numbering");
-  if(oldPixelNumbering){
+  const bool oldTubeNumbering = getParameterBoolean("old_tube_numbering");
+  if(oldTubeNumbering){
     if(numberOfPacksForInvertedNumbering == 0){
       return rowNumber * 8 + localIndex;
     }
