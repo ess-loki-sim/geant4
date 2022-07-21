@@ -13,6 +13,7 @@ class MaskingSourceGen(G4CustomPyGen.GenBase):
     def declare_parameters(self):
         self.addParameterDouble("x_width_meters", 0.0)
         self.addParameterDouble("y_width_meters", 0.0)
+        self.addParameterInt("aiming_rear_bank_pixel_number", 512) #used only for aiming, NOT for analysis
         #self.addParameterDouble("z_width_meters", 0.001)
 
     def init_generator(self,gun):
@@ -21,7 +22,7 @@ class MaskingSourceGen(G4CustomPyGen.GenBase):
         self._i = -1 #count events to shoot neutrons at each pixel
         ##self.aimHelper = Mask.bcsBanks(self.rear_detector_distance_m *Units.m) #doesn't work
         #self.aimHelper = Mask.bcsBanks(5.0 *Units.m)
-        self.aimHelper = Mask.maskingHelper(4.099 *Units.m)
+        self.aimHelper = Mask.maskingHelper(4.099 *Units.m, self.aiming_rear_bank_pixel_number)
         self.totalNumberOfPixels = self.aimHelper.getTotalNumberOfPixels()
 
     def generate_event(self,gun):

@@ -106,13 +106,18 @@ int main(int argc, char**argv) {
 
   SimpleHists::HistCollection hc;
 
+  auto userData = setup->userData();
+  pixelatedBanks* banks;
   const double sampleDetectorDistance = setup->geo().getParameterDouble("rear_detector_distance_m") *Units::m;
-  const int rearBankPixelNumber = setup->geo().getParameterInt("rear_bank_pixel_number");
-  printf("Rear bank pixel number: %d\n", rearBankPixelNumber);
+  if(userData.count("analysis_rear_bank_pixel_number")){
+    const int rearBankPixelNumber = std::stoi(userData["analysis_rear_bank_pixel_number"].c_str());
+    banks = new pixelatedBanks(sampleDetectorDistance, rearBankPixelNumber);
+  }
+  else{ // use default rear bank pixel number
+    banks = new pixelatedBanks(sampleDetectorDistance);
+  }
 
-  pixelatedBanks banks = pixelatedBanks(sampleDetectorDistance, rearBankPixelNumber);
-
-  const double tubeRadius = banks.tubes->getTubeOuterRadius(); //12.7; 
+  const double tubeRadius = banks->tubes->getTubeOuterRadius(); //12.7; 
 
   //float xmin = -53;
   const double ymin = -53; //20+1 tube in negative direction
@@ -168,7 +173,7 @@ int main(int argc, char**argv) {
        h_neutron_bank_theta_hit->setXLabel("Theta [degree]");
        h_neutron_bank_theta_hit->setYLabel("Bank id");
 
-  const int numberOfPixels = banks.getTotalNumberOfPixels();
+  const int numberOfPixels = banks->getTotalNumberOfPixels();
   printf("Number of pixels: %d\n", numberOfPixels);
   // auto h_neutron_pixel_hit_count = hc.book1D("Number of hits in pixels (all banks)", numberOfPixels, 0, numberOfPixels, "neutron_pixel_hit_count");
   //      h_neutron_pixel_hit_count->setXLabel("Pixel ID");
@@ -187,7 +192,7 @@ int main(int argc, char**argv) {
        h_neutron_pixel_geantino_masking->setYLabel("Straw ID");
 
 
-  const int numberOfPixels_rear = banks.getNumberOfPixels(0);
+  const int numberOfPixels_rear = banks->getNumberOfPixels(0);
   auto h_neutron_pixel_rear_hit = hc.book2D("Sum weight of hits in pixels of rear bank (hit)", 256, 0, 256, numberOfPixels_rear/256, 0, numberOfPixels_rear/256, "h_neutron_pixel_rear_hit");
        h_neutron_pixel_rear_hit->setXLabel("Pixel ID along straw");
        h_neutron_pixel_rear_hit->setYLabel("Straw ID");
@@ -322,7 +327,7 @@ int main(int argc, char**argv) {
             const int bankId_conv = seg->volumeCopyNumber(5);
 
             auto step = seg->lastStep();
-            const int pixelId = banks.getPixelId(bankId_conv, tubeId_conv, strawId_conv, step->postGlobalX(), step->postGlobalY());
+            const int pixelId = banks->getPixelId(bankId_conv, tubeId_conv, strawId_conv, step->postGlobalX(), step->postGlobalY());
            
             //TESTING
             
@@ -529,7 +534,7 @@ int main(int argc, char**argv) {
           const double theta_hit = Utils::theta(hit.eventHitPosition())/Units::degree;
           h_neutron_theta_hit->fill(theta_hit, hit.eventHitWeight());
 
-          const int pixelId = banks.getPixelId(bankId_conv, tubeId_conv, strawId_conv, position_hit[0], position_hit[1]);
+          const int pixelId = banks->getPixelId(bankId_conv, tubeId_conv, strawId_conv, position_hit[0], position_hit[1]);
           //h_neutron_pixel_hit_count->fill(pixelId, 1);
           //h_neutron_pixel_hit_weight->fill(pixelId, hit.eventHitWeight());
           h_neutron_pixel_hit->fill(pixelId%256, std::floor(pixelId/256), hit.eventHitWeight());

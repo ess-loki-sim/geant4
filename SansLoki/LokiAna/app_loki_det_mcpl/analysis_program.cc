@@ -56,11 +56,19 @@ int main(int argc, char**argv) {
 
   SimpleHists::HistCollection hc;
 
+  auto userData = setup->userData();
+  pixelatedBanks* banks;
   const double sampleDetectorDistance = setup->geo().getParameterDouble("rear_detector_distance_m") *Units::m;
-  const int rearBankPixelNumber = setup->geo().getParameterInt("rear_bank_pixel_number");
-  printf("Rear bank pixel number: %d\n", rearBankPixelNumber);
+  if(userData.count("analysis_rear_bank_pixel_number")){
+    const int rearBankPixelNumber = std::stoi(userData["analysis_rear_bank_pixel_number"].c_str());
+    banks = new pixelatedBanks(sampleDetectorDistance, rearBankPixelNumber);
+  }
+  else{ // use default rear bank pixel number
+    banks = new pixelatedBanks(sampleDetectorDistance);
+  }
+  
 
-  pixelatedBanks banks = pixelatedBanks(sampleDetectorDistance, rearBankPixelNumber);
+  //pixelatedBanks banks = pixelatedBanks(sampleDetectorDistance, rearBankPixelNumber);
  
   auto h_neutron_xy_hit = hc.book2D("Neutron xy (hit)", 2500, -1250, 1250, 2500, -1250, 1250, "neutron_xy_hit");
        h_neutron_xy_hit->setXLabel("-x [mm]");
@@ -89,7 +97,7 @@ int main(int argc, char**argv) {
         
         h_neutron_xy_hit->fill(-hit.eventHitPositionX()/Units::mm, hit.eventHitPositionY()/Units::mm, hit.eventHitWeight());
 
-        const int pixelId = banks.getPixelId(bankId_conv, tubeId_conv, strawId_conv, hit.eventHitPositionX(), hit.eventHitPositionY());
+        const int pixelId = banks->getPixelId(bankId_conv, tubeId_conv, strawId_conv, hit.eventHitPositionX(), hit.eventHitPositionY());
         
         mcplParticle->time = hit.eventHitTime()/Units::ms;
         mcplParticle->weight = hit.eventHitWeight();

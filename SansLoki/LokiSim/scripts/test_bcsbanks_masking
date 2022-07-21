@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ARGS="rear_detector_distance_m=4.099 rear_bank_pixel_number=1024 rear_detector_only=True with_beamstop=False larmor_rear_bank_experiment=True event_gen=masking x_offset_meters=0.005" 
+ARGS="rear_detector_distance_m=4.099 aiming_rear_bank_pixel_number=1024 analysis_rear_bank_pixel_number=512 rear_detector_only=True with_beamstop=False larmor_rear_bank_experiment=True event_gen=masking x_offset_meters=0.005" 
 ess_lokisim_bcsbanks_sim $ARGS -lESS_Empty |egrep '^G4Launcher::Launcher|NXS'
 if [ ${PIPESTATUS[0]} == 0 ]; then
     ess_lokiana_loki_ana_masking lokisim.griff

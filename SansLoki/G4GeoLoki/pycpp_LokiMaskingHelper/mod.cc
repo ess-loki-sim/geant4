@@ -4,6 +4,7 @@
 PYTHON_MODULE
 {
   py::class_<maskingHelper>("maskingHelper", py::init<double>())
+    .def(py::init<double, int>())
     .def("calcPixelCentrePositionForMasking",&maskingHelper::calcPixelCentrePositionForMasking)
     .def("getPixelCentrePosition",&maskingHelper::getPixelCentrePosition)
 

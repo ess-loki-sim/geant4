@@ -67,13 +67,19 @@ int main(int argc, char**argv) {
 
   SimpleHists::HistCollection hc;
 
+  auto userData = setup->userData();
+  pixelatedBanks* banks;
   const double sampleDetectorDistance = setup->geo().getParameterDouble("rear_detector_distance_m") *Units::m;
-  //TODO: try catch block might be needed to handle existing result files with no rear_bank_pixel_number param
-  const int rearBankPixelNumber = setup->geo().getParameterInt("rear_bank_pixel_number");
+  if(userData.count("analysis_rear_bank_pixel_number")){
+    const int rearBankPixelNumber = std::stoi(userData["analysis_rear_bank_pixel_number"].c_str());
+    banks = new pixelatedBanks(sampleDetectorDistance, rearBankPixelNumber);
+  }
+  else{ // use default rear bank pixel number
+    banks = new pixelatedBanks(sampleDetectorDistance);
+  }
 
-  pixelatedBanks banks = pixelatedBanks(sampleDetectorDistance, rearBankPixelNumber);
 
-  const double tubeRadius = banks.tubes->getTubeOuterRadius(); //12.7; 
+  const double tubeRadius = banks->tubes->getTubeOuterRadius(); //12.7; 
 
   const double ymin = -53; //20+1 tube in negative direction
   const int binsy = 1060/2;
@@ -115,8 +121,8 @@ int main(int argc, char**argv) {
   auto h_neutron_theta_hit = hc.book1D("Neutron theta (hit)", thetabins, 0, trueThetaMax, "neutron_theta_hit");
        h_neutron_theta_hit->setXLabel("Angle [degree]");
 
-  const int numberOfPixels = banks.getNumberOfPixels(0);
-  const int numberOfStraws = banks.getNumberOfTubes(0) * 7;
+  const int numberOfPixels = banks->getNumberOfPixels(0);
+  const int numberOfStraws = banks->getNumberOfTubes(0) * 7;
   const int numberOfPixelsPerStraw = numberOfPixels / numberOfStraws;
   printf("Number of pixels per straw: %d \t Total number of pixels: %d \n", numberOfPixelsPerStraw, numberOfPixels);
 
@@ -148,7 +154,7 @@ int main(int argc, char**argv) {
   const double xWidthVacuumTankEnd = 790 *Units::mm;
   const double yHeightVacuumTankEnd = 700 *Units::mm;
   const double zVacuumTankEnd = sampleDetectorDistance - 90*Units::mm; // "The front of the Loki detector was 90 mm in front of the tank”
-  const double zBankFront = sampleDetectorDistance - banks.detectorSystemFrontDistanceFromBankFront(0) *Units::mm;
+  const double zBankFront = sampleDetectorDistance - banks->detectorSystemFrontDistanceFromBankFront(0) *Units::mm;
   const double xBankEnterLimit = (xWidthVacuumTankEnd * 0.5) * (zBankFront / zVacuumTankEnd);
   const double yBankEnterLimit = (yHeightVacuumTankEnd * 0.5) * (zBankFront / zVacuumTankEnd);
   //std::cout<<"\n ***** \n xBankEnterLimit: " << xBankEnterLimit << "\n yBankEnterLimit: "<< yBankEnterLimit<< "\n ****** \n";
@@ -222,7 +228,7 @@ int main(int argc, char**argv) {
           const double theta_hit = Utils::theta(hit.eventHitPosition())/Units::degree;
           h_neutron_theta_hit->fill(theta_hit, hit.eventHitWeight());
 
-          const int pixelId = banks.getPixelId(0, tubeId_conv, strawId_conv, position_hit[0], position_hit[1]);
+          const int pixelId = banks->getPixelId(0, tubeId_conv, strawId_conv, position_hit[0], position_hit[1]);
 
           h_neutron_pixel_hit->fill(pixelId%numberOfPixelsPerStraw, std::floor(pixelId/numberOfPixelsPerStraw), hit.eventHitWeight());
           h_neutron_panelHitCounter->fill(panelNumber_conv, hit.eventHitWeight());

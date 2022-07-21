@@ -14,6 +14,10 @@ def launch(geo):
     launcher.addParameterDouble("sample_generator_distance_meters", 4.049) #For Larmor rear bank experiment
     launcher.addParameterString('mcplDirectory','')    
     launcher.addParameterDouble("x_offset_meters", 0.005) #5 mm offset for rear bank at Larmor experiment
+    
+    launcher.addParameterInt("analysis_rear_bank_pixel_number", 0) # zero means using default pixel number 
+    if(launcher.getParameterInt('analysis_rear_bank_pixel_number')):
+      launcher.setUserData("analysis_rear_bank_pixel_number", str(launcher.getParameterInt('analysis_rear_bank_pixel_number')))
 
    #geometry:
     launcher.setGeo(geo)
