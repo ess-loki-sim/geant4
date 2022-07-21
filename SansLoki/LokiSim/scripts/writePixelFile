@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import G4GeoLoki.LokiMaskingHelper as Mask
 
-aimHelper = Mask.bcsBanks(4.099 * 1000) #[mm]
+aimHelper = Mask.maskingHelper(4.099 * 1000) #[mm]
 pixelFile = open("pixelFile_oldNumbering.txt", "w")
 
 numberOfPixels = aimHelper.getTotalNumberOfPixels()

@@ -9,27 +9,24 @@
 
 class bcsBanks {
 public:
-  bcsBanks(double locRearBankDistance){
-    rearBankDistance = locRearBankDistance;
-  }
-  bcsBanks(double locRearBankDistance, int rearBankPixelNumber){
-    rearBankDistance = locRearBankDistance;
-    numberOfPixels[0] = rearBankPixelNumber;
-  }
+  bcsBanks(double rearBankDistance): rearBankDistance(rearBankDistance){}
 
+  /// bcs tubes ///
   static bcsTube* tubes;
+
+  /// bcs packs ///
   static bcsPack* packs;
 
-  /// bank ///
+  /// banks ///
   static double getPackRotation();
-  double getPackPackDistance() const;// TODO better name?
+  static double getPackPackDistance();// TODO better name?
   static double getTopmostPackPositionInBank(const int bankId, const int axisIndex); // 0 - x, 1 - y, 2 - z
 
-  double getStrawLengthByBankId(const int bankId) const;
-  int getNumberOfPacksByBankId(const int bankId) const; 
+  static double getStrawLengthByBankId(const int bankId);
+  static int getNumberOfPacksByBankId(const int bankId); 
   static int getNumberOfTubes(const int bankId); 
 
-  double getBankRotation(const int bankId, const int axisIndex) const; // 0 - x, 1 - y, 2 - z
+  static double getBankRotation(const int bankId, const int axisIndex); // 0 - x, 1 - y, 2 - z
   double getBankPosition(const int bankId, const int axisIndex) const; // 0 - x, 1 - y, 2 - z
   static double getBankSize(const int bankId, const int axisIndex); // 0 - x, 1 - y, 2 - z
 
@@ -38,24 +35,13 @@ public:
   static bool isVertical(const int bankId);
   static bool areTubesInverselyNumbered(const int bankId);
 
-  // boron masks
+  /// boron masks ///
   static boronMasks * masks;
   static double getBoronMaskPosition(const int bankId, const int maskId, const int axisIndex);
   static double getTriangularBoronMaskPosition(const int maskId, const int axisIndex);
 
-  // analysis
-  static int getTotalNumberOfPixels();
-  static int getNumberOfPixels(const int bankId);
-  int getPixelId(const int bankId, const int tubeId, const int strawId, const double positionX, const double positionY) const;
-
-  // masking
-  void calcPixelCentrePositionForMasking(const int pixelId);
-  double getPixelCentrePosition(const int axisIndex);
-
 private:
-  double rearBankDistance; //the only(?) non-static
-  
-  static double pixelCentrePosition[3]; //used for masking
+  double rearBankDistance;
 
   static double packHolderDistanceFromPackTop;
   static double packHolderDistanceFromPackFront;
@@ -82,17 +68,6 @@ private:
   static double packHolderToFirstTubeCentreCoordsInPack(const int axisIndex);
   static double detectorSystemCentreDistanceFromBankTop(const int bankId);
   static double detectorSystemCentreOffsetInBank(const int bankId, const int axisIndex);
-
-  // analysis
-  static int numberOfPixels[9];
-  static int getBankPixelOffset(const int bankId);
-  int getPositionPixelId(const int bankId, const double positionX, const double positionY) const;
-
-  // masking
-  static void coordinateRotation(double &x, double &y, const double angle);
-  static int getBankId(const int pixelId);
-  static int getTubeId(const int pixelId, const int bankId);
-  static int getStrawId(const int pixelId, const int bankId, const int tubeId);
 };
 
 #endif

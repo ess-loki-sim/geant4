@@ -363,9 +363,8 @@ G4VPhysicalVolume* GeoBCS::Construct(){
 
   auto world_material = getParameterMaterial("world_material"); 
   const double sdd = getParameterDouble("rear_detector_distance_m")*Units::m;
-  const int rearBankPixelNumber = getParameterInt("rear_bank_pixel_number");
 
-  banks = new bcsBanks(sdd,rearBankPixelNumber);
+  banks = new bcsBanks(sdd);
 
   // calculate a value that is big enough to fit your world volume, the "super mother"
   double big_dimension = 1.1*( 1 *Units::m + sdd);

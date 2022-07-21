@@ -1,12 +1,12 @@
 #include "Core/Python.hh"
-#include "G4GeoLoki/bcsBanks.hh"
+#include "G4GeoLoki/maskingHelper.hh"
 
 PYTHON_MODULE
 {
-  py::class_<bcsBanks>("bcsBanks", py::init<double>())
-    .def("calcPixelCentrePositionForMasking",&bcsBanks::calcPixelCentrePositionForMasking)
-    .def("getPixelCentrePosition",&bcsBanks::getPixelCentrePosition)
+  py::class_<maskingHelper>("maskingHelper", py::init<double>())
+    .def("calcPixelCentrePositionForMasking",&maskingHelper::calcPixelCentrePositionForMasking)
+    .def("getPixelCentrePosition",&maskingHelper::getPixelCentrePosition)
 
-    .def("getTotalNumberOfPixels",&bcsBanks::getTotalNumberOfPixels).staticmethod("getTotalNumberOfPixels")
+    .def("getTotalNumberOfPixels",&maskingHelper::getTotalNumberOfPixels).staticmethod("getTotalNumberOfPixels")
     ;
 }

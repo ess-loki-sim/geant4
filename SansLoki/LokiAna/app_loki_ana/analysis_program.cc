@@ -11,7 +11,7 @@
 #include <fstream>
 #include "MCPL/mcpl.h"
 
-#include "G4GeoLoki/bcsBanks.hh"
+#include "G4GeoLoki/pixelatedBanks.hh"
 //Griff analysis. See https://confluence.esss.lu.se/display/DG/Griff for more info.
 
 #ifndef M_PI
@@ -110,7 +110,7 @@ int main(int argc, char**argv) {
   const int rearBankPixelNumber = setup->geo().getParameterInt("rear_bank_pixel_number");
   printf("Rear bank pixel number: %d\n", rearBankPixelNumber);
 
-  bcsBanks banks = bcsBanks(sampleDetectorDistance, rearBankPixelNumber);
+  pixelatedBanks banks = pixelatedBanks(sampleDetectorDistance, rearBankPixelNumber);
 
   const double tubeRadius = banks.tubes->getTubeOuterRadius(); //12.7; 
 
@@ -542,7 +542,7 @@ int main(int argc, char**argv) {
             h_neutron_pixel_rear_hit->fill(pixelId%256, std::floor(pixelId/256), hit.eventHitWeight());
           }
 
-          //TODO should implement method (in bcsBanks class) to get positionOnWire_hit coordinate. Ask Judit, how it is done in real data reduction.
+          //TODO should implement method (in pixelatedBanks class) to get positionOnWire_hit coordinate. Ask Judit, how it is done in real data reduction.
           const double sampleToExactHitPositionDistance = std::sqrt(std::pow((position_hit[0] - initialPosition[0]), 2) +
                                                                     std::pow((position_hit[1] - initialPosition[1]), 2) +
                                                                     std::pow((position_hit[2] - initialPosition[2]), 2));

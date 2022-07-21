@@ -11,7 +11,7 @@
 #include <fstream>
 #include "MCPL/mcpl.h"
 
-#include "G4GeoLoki/bcsBanks.hh"
+#include "G4GeoLoki/pixelatedBanks.hh"
 //Griff analysis. See https://confluence.esss.lu.se/display/DG/Griff for more info.
 
 #ifndef M_PI
@@ -57,7 +57,10 @@ int main(int argc, char**argv) {
   SimpleHists::HistCollection hc;
 
   const double sampleDetectorDistance = setup->geo().getParameterDouble("rear_detector_distance_m") *Units::m;
-  bcsBanks banks = bcsBanks(sampleDetectorDistance);
+  const int rearBankPixelNumber = setup->geo().getParameterInt("rear_bank_pixel_number");
+  printf("Rear bank pixel number: %d\n", rearBankPixelNumber);
+
+  pixelatedBanks banks = pixelatedBanks(sampleDetectorDistance, rearBankPixelNumber);
  
   auto h_neutron_xy_hit = hc.book2D("Neutron xy (hit)", 2500, -1250, 1250, 2500, -1250, 1250, "neutron_xy_hit");
        h_neutron_xy_hit->setXLabel("-x [mm]");
