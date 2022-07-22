@@ -12,6 +12,7 @@
 //#include <fstream>
 #include <cmath>
 #include <string> 
+#include <cassert>
 
 #include "G4GeoLoki/bcsBanks.hh"
 
@@ -33,8 +34,7 @@ private:
   G4LogicalVolume * createTriangularMaskLV(int maskId);
   G4LogicalVolume * createCalibrationSlitMaskLV();
 
-
-  int getTubeNumber(double rowNumber, int localIndex, int numberOfPacksForInvertedNumbering, int numberOfPacks);
+  int getTubeNumber(int packNumber, int inPackTubeId, int numberOfPacksForInvertedNumbering, int numberOfPacks);
 };
 
 // this line is necessary to be able to declare the geometry in the python simulation script 
@@ -72,28 +72,23 @@ GeoBCS::GeoBCS()
 }
 
 G4LogicalVolume * GeoBCS::createTubeLV(double converterThickness, double strawLength){
-  const double tubeOuterRadius = banks->tubes->getTubeOuterRadius();
-  const double tubeInnerRadius = banks->tubes->getTubeInnerRadius();
-
-  const double strawOuterRadius = banks->tubes->getStrawOuterRadius();
-  const double strawInnerRadius = banks->tubes->getStrawInnerRadius();
-  const double strawWallThickness = banks->tubes->getStrawWallThickness();
-  const double effectiveStrawLength = strawLength - strawWallThickness; //This is only epsilon difference...
-
   auto tubeWallMaterial = getParameterMaterial("tube_wall_material");
   auto tubeInnerGas = getParameterMaterial("tube_inner_gas");
   auto strawWallMaterial = getParameterMaterial("straw_wall_material");
-  auto counting_gas = getParameterMaterial("counting_gas");
   auto converterMaterial = getParameterMaterial("converter_material");
+  auto counting_gas = getParameterMaterial("counting_gas");
 
-  auto lv_tube = new G4LogicalVolume(new G4Tubs("TubeWall",0, tubeOuterRadius, 0.5*strawLength, 0., 2*M_PI),
+  const double strawInnerRadius = banks->tubes->getStrawInnerRadius();
+  const double effectiveStrawLength = strawLength - banks->tubes->getStrawWallThickness(); //This is only epsilon difference...
+
+  auto lv_tube = new G4LogicalVolume(new G4Tubs("TubeWall",0,  banks->tubes->getTubeOuterRadius(), 0.5*strawLength, 0., 2*M_PI),
                                      tubeWallMaterial, "TubeWall");
 
-  auto lv_empty_tube = place(new G4Tubs("EmptyTube", 0., tubeInnerRadius, 0.5*strawLength, 0., 2*M_PI),
+  auto lv_empty_tube = place(new G4Tubs("EmptyTube", 0., banks->tubes->getTubeInnerRadius(), 0.5*strawLength, 0., 2*M_PI),
                                            tubeInnerGas, 0,0,0, lv_tube, G4Colour(0,1,1),-2,0,0).logvol;
   
   for (int cpNo = 0; cpNo <= 6; cpNo++){
-    auto lv_straw_wall = place(new G4Tubs("StrawWall", 0, strawOuterRadius, 0.5 * strawLength, 0., 2 * M_PI),
+    auto lv_straw_wall = place(new G4Tubs("StrawWall", 0, banks->tubes->getStrawOuterRadius(), 0.5 * strawLength, 0., 2 * M_PI),
                                strawWallMaterial, banks->tubes->getStrawPositionX(cpNo), banks->tubes->getStrawPositionY(cpNo), 0, lv_empty_tube, ORANGE, cpNo, 0, 0).logvol;
 
     auto lv_converter = place(new G4Tubs("Converter", 0., strawInnerRadius, 0.5*effectiveStrawLength, 0., 2 * M_PI),
@@ -105,99 +100,64 @@ G4LogicalVolume * GeoBCS::createTubeLV(double converterThickness, double strawLe
   return lv_tube;
 }
 
-int GeoBCS::getTubeNumber(double rowNumber, int localIndex, int numberOfPacksForInvertedNumbering, int numberOfPacks){
+int GeoBCS::getTubeNumber(int packNumber, int inPackTubeId, int numberOfPacksForInvertedNumbering, int numberOfPacks){
+  assert(0 <= inPackTubeId && inPackTubeId <= 7);
+  const double rowNumber = packNumber + 0.5* ((int)inPackTubeId/4); // +0.5 for second row (inPackTubeId > 3)
+  inPackTubeId %= 4;
+  
   const bool oldTubeNumbering = getParameterBoolean("old_tube_numbering");
   if(oldTubeNumbering){
     if(numberOfPacksForInvertedNumbering == 0){
-      return rowNumber * 8 + localIndex;
+      return rowNumber * 8 + inPackTubeId;
     }
     else{
-      return (numberOfPacksForInvertedNumbering*8 - 4) - rowNumber*8 + localIndex;
+      return (numberOfPacksForInvertedNumbering*8 - 4) - rowNumber*8 + inPackTubeId;
     }
   }
   else{ // new numbering
-    const int layerNr = localIndex; //[0-3]
+    const int layerNr = inPackTubeId; //[0-3]
     if(numberOfPacksForInvertedNumbering == 0){
       return rowNumber * 2 + layerNr * numberOfPacks * 2;
     }
     else{ 
       return (numberOfPacks*2 - 1) - rowNumber*2 + layerNr * numberOfPacks * 2;
     }
-
   }
 }
 
 ///////////  CREATE PACK BOX LOGICAL VOLUME  //////////////////////////
-
 G4LogicalVolume *GeoBCS::createPackBoxLV(double strawLength, int packNumber, int numberOfPacksForInvertedNumbering, int numberOfPacks){
   auto pack_fill_material = getParameterMaterial("pack_box_fill_material");
-  auto B4C_panel_material = getParameterMaterial("B4C_panel_material");
-  auto Al_panel_material = getParameterMaterial("tube_wall_material"); //TODO check if the matterial is the same
-
-  const double packBoxHeightHalf = 0.5 * banks->packs->getPackBoxHeight();
-  const double horizontalTubeDistance = banks->packs->getHorizontalTubeDistanceInPack();
-  const double idleLengthOnOneEnd = banks->packs->getPackBoxIdleLengthOnOneEnd();
-
-  const double horizontalOffset = banks->packs->getHorizontalTubeCentreOffsetInPack();
-  const double verticalOffset = banks->packs->getVerticalTubeCentreOffsetInPack();
-
-  G4RotationMatrix* tubeRotationMatrix = new G4RotationMatrix(0, 0, banks->packs->getTubeRotation());
-
-  const double topRowOffset = banks->packs->getTopRowOffsetInPack(); /// offset by 28.4sin(13.45)
-
-  auto lv_pack_box = new G4LogicalVolume(new G4Box("EmptyPackBox", 0.5*banks->packs->getPackBoxWidth(), packBoxHeightHalf, 0.5 * strawLength + idleLengthOnOneEnd), pack_fill_material, "EmptyPackBox");
-
+  auto lv_pack_box = new G4LogicalVolume(new G4Box("EmptyPackBox", 0.5*banks->packs->getPackBoxWidth(), 0.5*banks->packs->getPackBoxHeight(), 0.5 * strawLength + banks->packs->getPackBoxIdleLengthOnOneEnd()), pack_fill_material, "EmptyPackBox");
+  /// Add 8 bcs detector tubes ///
   auto lv_front_tube = createTubeLV(banks->tubes->getFrontTubeConverterThickness(), strawLength); 
   auto lv_back_tube = createTubeLV(banks->tubes->getBackTubeConverterThickness(), strawLength); 
+  G4RotationMatrix* tubeRotationMatrix = new G4RotationMatrix(0, 0, banks->packs->getTubeRotation());
 
-  place(lv_front_tube, horizontalOffset + topRowOffset, verticalOffset, 0, lv_pack_box, SILVER, getTubeNumber(packNumber, 0,numberOfPacksForInvertedNumbering, numberOfPacks), 0, tubeRotationMatrix);
-  place(lv_front_tube, horizontalOffset + topRowOffset + horizontalTubeDistance, verticalOffset, 0, lv_pack_box, SILVER, getTubeNumber(packNumber, 1,numberOfPacksForInvertedNumbering, numberOfPacks), 0, tubeRotationMatrix);
-  place(lv_back_tube, horizontalOffset + topRowOffset + 2.0 * horizontalTubeDistance, verticalOffset, 0, lv_pack_box, SILVER, getTubeNumber(packNumber, 2, numberOfPacksForInvertedNumbering, numberOfPacks), 0, tubeRotationMatrix);
-  place(lv_back_tube, horizontalOffset + topRowOffset + 3.0 * horizontalTubeDistance, verticalOffset, 0, lv_pack_box, SILVER, getTubeNumber(packNumber, 3, numberOfPacksForInvertedNumbering, numberOfPacks), 0, tubeRotationMatrix); // 1st trans is z, 2nd trans is y, 3rd trans is x
-
-  place(lv_front_tube, horizontalOffset, -verticalOffset, 0, lv_pack_box, SILVER, getTubeNumber(packNumber+0.5, 0, numberOfPacksForInvertedNumbering, numberOfPacks), 0, tubeRotationMatrix);
-  place(lv_front_tube, horizontalOffset + horizontalTubeDistance, -verticalOffset, 0, lv_pack_box, SILVER, getTubeNumber(packNumber+0.5, 1,numberOfPacksForInvertedNumbering, numberOfPacks), 0, tubeRotationMatrix);
-  place(lv_back_tube, horizontalOffset + 2.0 * horizontalTubeDistance, -verticalOffset, 0, lv_pack_box, SILVER, getTubeNumber(packNumber+0.5, 2,numberOfPacksForInvertedNumbering, numberOfPacks), 0, tubeRotationMatrix);
-  place(lv_back_tube, horizontalOffset + 3.0 * horizontalTubeDistance, -verticalOffset, 0, lv_pack_box, SILVER, getTubeNumber(packNumber+0.5, 3, numberOfPacksForInvertedNumbering, numberOfPacks), 0, tubeRotationMatrix);
-
-  /// Add B4C panel in 3 parts //
+  for (int inPackTubeId = 0; inPackTubeId < 8; inPackTubeId++) {
+    place((inPackTubeId % 4 < 2) ? lv_front_tube : lv_back_tube, 
+          banks->packs->getHorizontalTubeOffset(inPackTubeId), banks->packs->getVerticalTubeOffset(inPackTubeId), 0, 
+          lv_pack_box, SILVER, getTubeNumber(packNumber, inPackTubeId, numberOfPacksForInvertedNumbering, numberOfPacks), 0, tubeRotationMatrix);
+  }
+  /// Add B4C panel behind detectors in 3 parts ///
+  auto B4C_panel_material = getParameterMaterial("B4C_panel_material");
   const double B4CLengthHalf = 0.5*strawLength + banks->packs->getB4CLengthOverStrawOnOneEnd();
-  const double B4CMainThicknessHalf = 0.5*banks->packs->getB4CPanelThickness();
-  const double B4CMainPartHeightHalf = 0.5*banks->packs->getB4CMainPartHeight();
-  const double B4CMainPartHorizontalOffset = banks->packs->getB4CMainPartHorizontalOffset();
-  const double B4CMainPartVerticalOffset = banks->packs->getB4CMainPartVerticalOffset();
 
-  const double B4CMiddlePartThicknessHalf = 0.5*banks->packs->getB4CMiddlePartThickness();
-  const double B4CMiddlePartHeightHalf = 0.5*banks->packs->getB4CMiddlePartHeight();
-  const double B4CMiddlePartHorizontalOffset = banks->packs->getB4CMiddlePartHorizontalOffset();
-  const double B4CMiddlePartVerticalOffset = banks->packs->getB4CMiddlePartVerticalOffset();
+  for (int partId = 0; partId < 3; partId++){
+    place(new G4Box("B4CPanel", 0.5*banks->packs->getB4CPartThickness(partId), 0.5*banks->packs->getB4CPartHeight(partId), B4CLengthHalf), 
+          B4C_panel_material, 
+          banks->packs->getB4CPartHorizontalOffset(partId), banks->packs->getB4CPartVerticalOffset(partId), 0, 
+          lv_pack_box, G4Colour(0, 1, 0), -2, 0, new G4RotationMatrix());
+    }
+  /// Add Al behing the B4C panel in 2 parts ///
+  auto Al_panel_material = getParameterMaterial("tube_wall_material");
 
-  const double B4CBottomPartThicknessHalf = 0.5*banks->packs->getB4CBottomPartThickness();
-  const double B4CBottomPartHeightHalf = 0.5*banks->packs->getB4CBottomPartHeight();
-  const double B4CBottomPartHorizontalOffset = banks->packs->getB4CBottomPartHorizontalOffset();
-  const double B4CBottomPartVerticalOffset = banks->packs->getB4CBottomPartVerticalOffset();
-
-  auto lv_B4C_main_part = new G4LogicalVolume(new G4Box("B4CPanel", B4CMainThicknessHalf, B4CMainPartHeightHalf, B4CLengthHalf), B4C_panel_material, "B4CPanel");
-  auto lv_B4C_middle_part = new G4LogicalVolume(new G4Box("B4CPanel", B4CMiddlePartThicknessHalf, B4CMiddlePartHeightHalf, B4CLengthHalf), B4C_panel_material, "B4CPanel");
-  auto lv_B4C_bottom_part = new G4LogicalVolume(new G4Box("B4CPanel", B4CBottomPartThicknessHalf, B4CBottomPartHeightHalf, B4CLengthHalf), B4C_panel_material, "B4CPanel");
-
-  place(lv_B4C_main_part, B4CMainPartHorizontalOffset, B4CMainPartVerticalOffset, 0, lv_pack_box, G4Colour(0, 1, 0), -2, 0, new G4RotationMatrix());
-  place(lv_B4C_middle_part, B4CMiddlePartHorizontalOffset, B4CMiddlePartVerticalOffset, 0, lv_pack_box, G4Colour(0, 1, 0), -2, 0, new G4RotationMatrix());
-  place(lv_B4C_bottom_part, B4CBottomPartHorizontalOffset, B4CBottomPartVerticalOffset, 0, lv_pack_box, G4Colour(0, 1, 0), -2, 0, new G4RotationMatrix());
-
-  // Add Al behing the B4C panel //This part should be cleaned up
-  const double AlMainThicknessHalf = B4CBottomPartHeightHalf;
-  const double AlMainHeightHalf = B4CMainPartHeightHalf + B4CBottomPartHeightHalf;
-  const double AlMainPartHorizontalOffset = B4CMainPartHorizontalOffset + B4CMainThicknessHalf + AlMainThicknessHalf;
-  const double AlBottomThicknessHalf = B4CMiddlePartThicknessHalf - B4CBottomPartThicknessHalf + B4CMainThicknessHalf;
-  const double AlBottomPartHorizontalOffset = AlMainPartHorizontalOffset - AlMainThicknessHalf - AlBottomThicknessHalf;
-
-  auto lv_Al_main_part = new G4LogicalVolume(new G4Box("AlPanel", AlMainThicknessHalf, AlMainHeightHalf, B4CLengthHalf), Al_panel_material, "AlPanel");
-  auto lv_Al_bottom_part = new G4LogicalVolume(new G4Box("AlPanel", AlBottomThicknessHalf, B4CBottomPartHeightHalf, B4CLengthHalf), Al_panel_material, "AlPanel");
-  
-  place(lv_Al_main_part, AlMainPartHorizontalOffset, 0, 0, lv_pack_box, SILVER, -2, 0, new G4RotationMatrix());
-  place(lv_Al_bottom_part, AlBottomPartHorizontalOffset, B4CBottomPartVerticalOffset, 0, lv_pack_box, SILVER, -2, 0, new G4RotationMatrix());
-
+  for (int partId = 0; partId < 2; partId++){
+    place(new G4Box("AlPanel", 0.5*banks->packs->getAlPartThickness(partId), 0.5*banks->packs->getAlPartHeight(partId), B4CLengthHalf), 
+          Al_panel_material,
+          banks->packs->getAlPartHorizontalOffset(partId),  banks->packs->getAlPartVerticalOffset(partId), 0,
+          lv_pack_box, SILVER, -2, 0, new G4RotationMatrix());
+    }
   return lv_pack_box;
 }
 
@@ -403,8 +363,7 @@ G4VPhysicalVolume* GeoBCS::Construct(){
       place(lv_calibrationSlits,
             horisontalPosition, verticalPosition, banks->getBankPosition(bankId, 2) -bankSizeZHalf + detBankFrontDistance - 75*Units::mm, // 75mm in front of the first layer of tubes
             lvWorld, BLACK, -5, 0, rotation);
-  }
-
+      }
   }
 
   

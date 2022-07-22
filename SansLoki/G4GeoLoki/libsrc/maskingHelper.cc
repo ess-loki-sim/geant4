@@ -51,7 +51,7 @@ void maskingHelper::calcPixelCentrePositionForMasking(const int pixelId) {
                            areTubesInverselyNumbered(bankId) ? (tubeId + 4) % 8 : tubeId % 8;
   const double horizontalTubeDistance = packs->getHorizontalTubeDistanceInPack();
   const double topRowOffset = packs->getTopRowOffsetInPack();  
-  const double verticalOffset = packs->getVerticalTubeCentreOffsetInPack(); 
+  const double verticalOffset = 0.5*packs->getVerticalTubeDistanceInPack(); 
   
   // apply tube rotation
   coordinateRotation(positionX, positionY, tubeRotation);

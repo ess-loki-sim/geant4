@@ -214,7 +214,7 @@ double bcsBanks::getTopmostPackPositionInBank(const int bankId, const int axisIn
 
 double bcsBanks::packHolderToFirstTubeCentreCoordsInPack(const int axisIndex) {
   if(axisIndex == 1) { //y
-    return 0.5*packs->getPackBoxHeight() + packs->getVerticalTubeCentreOffsetInPack() - packHolderDistanceFromPackTop;
+    return 0.5*packs->getPackBoxHeight() + 0.5*packs->getVerticalTubeDistanceInPack() - packHolderDistanceFromPackTop;
   }
   else {//z
     return packs->getTubeCentreDistanceFromPackFront() - packHolderDistanceFromPackFront;

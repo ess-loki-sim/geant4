@@ -8,13 +8,10 @@ class bcsPack {
 public:
   static double getHorizontalTubeDistanceInPack();
   static double getVerticalTubeDistanceInPack();
-
   static double getTubeGridParallelogramAngle();
-  static double getTubeRotation();
 
   static double getTopRowOffsetInPack();
   static double getHorizontalTubeCentreOffsetInPack();
-  static double getVerticalTubeCentreOffsetInPack();
 
   static double getTubeGridParallelogramSide();
   static double getTubeCentreDistanceFromPackFront();
@@ -23,21 +20,23 @@ public:
   static double getPackBoxHeight();
   static double getPackBoxIdleLengthOnOneEnd();
 
-  static double getB4CPanelThickness();
+  static double getTubeRotation();
+  static double getHorizontalTubeOffset(const int inPackTubeId);
+  static double getVerticalTubeOffset(const int inPackTubeId);
+
+  /// B4C panel parts ///
   static double getB4CLengthOverStrawOnOneEnd();
-  static double getB4CMainPartHeight();
-  static double getB4CMainPartHorizontalOffset();
-  static double getB4CMainPartVerticalOffset();
 
-  static double getB4CMiddlePartThickness();  
-  static double getB4CMiddlePartHeight();  
-  static double getB4CMiddlePartHorizontalOffset();
-  static double getB4CMiddlePartVerticalOffset();
+  static double getB4CPartThickness(const int partId);
+  static double getB4CPartHeight(const int partId);
+  static double getB4CPartHorizontalOffset(const int partId);
+  static double getB4CPartVerticalOffset(const int partId);
 
-  static double getB4CBottomPartThickness();  
-  static double getB4CBottomPartHeight();  
-  static double getB4CBottomPartHorizontalOffset();
-  static double getB4CBottomPartVerticalOffset();
+  /// Al panel parts ///
+  static double getAlPartThickness(const int partId);
+  static double getAlPartHeight(const int partId);
+  static double getAlPartHorizontalOffset(const int partId);
+  static double getAlPartVerticalOffset(const int partId);
 
 private:
   static double tubeGridParallelogramBase;
@@ -54,16 +53,11 @@ private:
   static double packHolderDistanceFromPackTop;
   static double packHolderDistanceFromPackFront;
 
+  /// B4C panel parts ///
   static double B4CLengthOverStrawOnOneEnd;
   static double B4CDistanceFromLastTubeCentre;
-
-  static double B4CMainPartHeight;
-  static double B4CPanelThickness;
-  static double B4CMiddlePartHeight;
-  static double B4CMiddlePartThickness;
-  static double B4CBottomPartHeight;
-  static double B4CBottomPartThickness;
-
+  static double B4CPanelPartThickness[3];
+  static double B4CPanelPartHeight[3];
 };
 
 #endif
