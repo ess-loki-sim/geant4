@@ -3,11 +3,13 @@
 #include <cmath>
 #include <iostream>
 #include <array>
+#include <cassert>
 
 //////// Utilities for getting the centre coordinates of a pixel ////////
 double maskingHelper::pixelCentrePosition[3] = { 0.0, 0.0, 0.0};
 
 double maskingHelper::getPixelCentrePosition(const int axisIndex){
+  assert(0 <= axisIndex && axisIndex <= 2);
   return pixelCentrePosition[axisIndex];
 }
 
@@ -16,11 +18,11 @@ void maskingHelper::calcPixelCentrePositionForMasking(const int pixelId) {
   const int bankId = getBankId(pixelId);
   const int tubeId = getTubeId(pixelId, bankId);
   const int strawId = getStrawId(pixelId, bankId, tubeId);
-  const int locPixelId = pixelId % numberOfPixelsInStraw[bankId];
+  const int locPixelId = pixelId % getNumberOfPixelsInStraw(bankId);
   
   
   ///////// pixel in straw /////////
-  const double pixelLength = getStrawLengthByBankId(bankId) / numberOfPixelsInStraw[bankId];
+  const double pixelLength = getStrawLengthByBankId(bankId) / getNumberOfPixelsInStraw(bankId);
   //const int vertical = isVertical(bankId);
   double positionZ = 0.0;
 
@@ -121,12 +123,12 @@ int maskingHelper::getBankId(const int pixelId) {
 
 int maskingHelper::getTubeId(const int pixelId, const int bankId) {
   const int pixelIdInBank = pixelId - getBankPixelOffset(bankId);
-  const int numberOfPixelsInATube = numberOfPixelsInStraw[bankId] * 7;
+  const int numberOfPixelsInATube = getNumberOfPixelsInStraw(bankId) * 7;
   return (int) pixelIdInBank / numberOfPixelsInATube;
 }
 
 int maskingHelper::getStrawId(const int pixelId, const int bankId, const int tubeId) {
   const int pixelIdInBank = pixelId - getBankPixelOffset(bankId);
-  const int pixelIdInTube = pixelIdInBank - tubeId * 7 * numberOfPixelsInStraw[bankId];
-  return (int) pixelIdInTube / numberOfPixelsInStraw[bankId]; 
+  const int pixelIdInTube = pixelIdInBank - tubeId * 7 * getNumberOfPixelsInStraw(bankId);
+  return (int) pixelIdInTube / getNumberOfPixelsInStraw(bankId); 
 }

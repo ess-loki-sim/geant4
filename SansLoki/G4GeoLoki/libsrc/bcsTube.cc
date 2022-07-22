@@ -1,6 +1,7 @@
 #include "G4GeoLoki/bcsTube.hh"
 #include "Core/Units.hh"
 #include <cmath>
+#include <cassert>
 
 double bcsTube::strawOuterRadius = 3.75 *Units::mm;
 double bcsTube::strawWallThickness = 0.0254 *Units::mm; //0.001 inch
@@ -49,9 +50,11 @@ double bcsTube::strawPositionsInTube[7][2] = { //TODO reorder to change volume n
     { 0.5*strawStrawDistance * tan(M_PI/3.), 0.5*strawStrawDistance }, //40
   };
 
-double bcsTube::getStrawPositionX(const int strawId) { 
+double bcsTube::getStrawPositionX(const int strawId) {
+  assert(0 <= strawId && strawId <= 6);
   return strawPositionsInTube[strawId][0]; 
 }
 double bcsTube::getStrawPositionY(const int strawId) { 
+  assert(0 <= strawId && strawId <= 6);
   return strawPositionsInTube[strawId][1]; 
 }

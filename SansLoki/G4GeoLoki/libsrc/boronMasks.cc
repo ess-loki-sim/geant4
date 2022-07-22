@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include <array>
+#include <cassert>
 
 /// regular rectangular masks ///
 
@@ -81,8 +82,12 @@ std::array<std::array<double, 7>, 8> boronMasks::frontVerticalBoronMasks = {{
 }};
 
 double boronMasks::getBoronMaskParameter(const int bankId, const int maskId, const int parameterIndex) {
+  assert(0 <= bankId && bankId <= 8);
+  assert(0 <= parameterIndex && parameterIndex <= 7);
+  assert(0 <= maskId && maskId <= 8);
   switch (bankId) {
   case 0:
+    assert(0 <= maskId && maskId <= 6);
     return rearBoronMasks[maskId][parameterIndex] *Units::mm;
   case 1:
   case 3:
@@ -103,6 +108,7 @@ double boronMasks::getBoronMaskParameter(const int bankId, const int maskId, con
 }
 
 int boronMasks::getNumberOfBoronMasks(const int bankId) {
+  assert(0 <= bankId && bankId <= 8);
   switch (bankId) {
   case 0:
     return rearBoronMasks.size();
@@ -125,9 +131,11 @@ int boronMasks::getNumberOfBoronMasks(const int bankId) {
 }
 
 double boronMasks::getSize(const int bankId, const int maskId, const int axisIndex) {
+  assert(0 <= axisIndex && axisIndex <= 2);
   return getBoronMaskParameter(bankId, maskId, axisIndex);
 }
 double boronMasks::getPosition(const int bankId, const int maskId, const int axisIndex) {
+  assert(0 <= axisIndex && axisIndex <= 2);
   return getBoronMaskParameter(bankId, maskId, axisIndex + 3);
 }
 double boronMasks::getRotation(const int bankId, const int maskId) {
@@ -145,20 +153,26 @@ std::array<std::array<double, 10>, 4> boronMasks::triangularBoronMasks = {{
 }};
 
 double boronMasks::getTriangularBoronMaskParameter(const int maskId, const int parameterIndex) {
-  return triangularBoronMasks[maskId][parameterIndex] *Units::mm;
+  assert(0 <= maskId && maskId <= 3);
+  assert(0 <= parameterIndex && parameterIndex <= 9);
+  return triangularBoronMasks[maskId][parameterIndex];
 }
 double boronMasks::getHalfSizeOfTriangularMask(const int maskId, const int axisIndex) {
-  return triangularBoronMasks[maskId][axisIndex] *Units::mm; // axisIndex range 0-2
+  assert(0 <= axisIndex && axisIndex <= 2);
+  return getTriangularBoronMaskParameter(maskId, axisIndex) *Units::mm;
 }
 double boronMasks::getCutPointOfTriangularMask(const int maskId, const int axisIndex) {
-  return triangularBoronMasks[maskId][3 + axisIndex] *Units::mm; // axisIndex range 0-1
+  assert(0 <= axisIndex && axisIndex <= 1);
+  return getTriangularBoronMaskParameter(maskId, 3 + axisIndex) *Units::mm;
 }
-double boronMasks::getCutDirOfTriangularMask(const int maskId, const int axisIndex) { 
-  return triangularBoronMasks[maskId][5 + axisIndex]; // axisIndex range 0-1
+double boronMasks::getCutDirOfTriangularMask(const int maskId, const int axisIndex) {
+  assert(0 <= axisIndex && axisIndex <= 1); 
+  return getTriangularBoronMaskParameter(maskId, 5 + axisIndex);
 }
 double boronMasks::getBankIdOfTriangularMask(const int maskId) {
-  return triangularBoronMasks[maskId][7]; 
+  return getTriangularBoronMaskParameter(maskId, 7); 
 }
 double boronMasks::getPosInBankOfTriangularMask(const int maskId, const int axisIndex) { //CentreDistanceFromBankCentre
-  return triangularBoronMasks[maskId][8 + axisIndex] *Units::mm; // axisIndex range 0-1
+  assert(0 <= axisIndex && axisIndex <= 1);
+  return getTriangularBoronMaskParameter(maskId, 8 + axisIndex) *Units::mm;
 }

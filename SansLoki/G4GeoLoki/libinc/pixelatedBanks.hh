@@ -16,11 +16,13 @@ public:
   static int getNumberOfPixels(const int bankId);
   int getPixelId(const int bankId, const int tubeId, const int strawId, const double positionX, const double positionY) const;
 
-protected:
-  static int numberOfPixelsInStraw[9];
+  static int getNumberOfPixelsInStraw(const int bankId);
+
+protected:  
   static int getBankPixelOffset(const int bankId); 
 
 private:
+  static int numberOfPixelsInStraw[9];
   int getPositionPixelId(const int bankId, const double positionX, const double positionY) const;
 };
 
