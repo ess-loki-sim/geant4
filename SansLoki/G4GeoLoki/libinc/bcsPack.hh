@@ -1,8 +1,7 @@
 #ifndef G4GeoLoki_bcsPack_hh
 #define G4GeoLoki_bcsPack_hh
 
-#include <string>
-#include <array>
+#include "G4Materials/NamedMaterialProvider.hh"
 
 class bcsPack {
 public:
@@ -16,6 +15,7 @@ public:
   static double getTubeGridParallelogramSide();
   static double getTubeCentreDistanceFromPackFront();
 
+  static G4Material* packBoxFillMaterial;
   static double getPackBoxWidth();
   static double getPackBoxHeight();
   static double getPackBoxIdleLengthOnOneEnd();
@@ -25,6 +25,7 @@ public:
   static double getVerticalTubeOffset(const int inPackTubeId);
 
   /// B4C panel parts ///
+  static G4Material* B4CPanelMaterial;
   static double getB4CLengthOverStrawOnOneEnd();
 
   static double getB4CPartThickness(const int partId);
@@ -33,6 +34,7 @@ public:
   static double getB4CPartVerticalOffset(const int partId);
 
   /// Al panel parts ///
+  static G4Material* AlPanelMaterial;
   static double getAlPartThickness(const int partId);
   static double getAlPartHeight(const int partId);
   static double getAlPartHorizontalOffset(const int partId);

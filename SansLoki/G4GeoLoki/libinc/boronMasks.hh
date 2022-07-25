@@ -1,11 +1,12 @@
 #ifndef G4GeoLoki_boronMasks_hh
 #define G4GeoLoki_boronMasks_hh
 
-#include <string>
+#include "G4Materials/NamedMaterialProvider.hh"
 #include <array>
 
 class boronMasks {
 public:
+  static G4Material* maskMaterial;
   /// regular rectangular masks ///
   static int getNumberOfBoronMasks(const int bankId);
   static double getSize(const int bankId, const int maskId, const int axisIndex);

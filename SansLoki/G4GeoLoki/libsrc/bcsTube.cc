@@ -3,6 +3,12 @@
 #include <cmath>
 #include <cassert>
 
+G4Material* bcsTube::tubeWallMaterial = NamedMaterialProvider::getMaterial("NCrystal:cfg=Al_sg225.ncmat"); 
+G4Material* bcsTube::tubeInnerGas = NamedMaterialProvider::getMaterial("IdealGas:formula=0.8*Ar+0.2*CO2:pressure_atm=0.7"); 
+G4Material* bcsTube::strawWallMaterial = NamedMaterialProvider::getMaterial("NCrystal:cfg=Cu_sg225.ncmat"); 
+G4Material* bcsTube::converterMaterial = NamedMaterialProvider::getMaterial("ESS_B4C:b10_enrichment=0.95"); 
+G4Material* bcsTube::countingGas = NamedMaterialProvider::getMaterial("IdealGas:formula=0.8*Ar+0.2*CO2:pressure_atm=0.7"); 
+
 double bcsTube::strawOuterRadius = 3.75 *Units::mm;
 double bcsTube::strawWallThickness = 0.0254 *Units::mm; //0.001 inch
 

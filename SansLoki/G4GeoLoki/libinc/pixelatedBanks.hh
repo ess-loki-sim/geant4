@@ -2,8 +2,6 @@
 #define G4GeoLoki_pixelatedBanks_hh
 
 #include "G4GeoLoki/bcsBanks.hh"
-#include <string>
-#include <array>
 
 class pixelatedBanks : public bcsBanks{
 public:

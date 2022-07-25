@@ -1,12 +1,18 @@
 #ifndef G4GeoLoki_bcsTube_hh
 #define G4GeoLoki_bcsTube_hh
 
-#include <string>
-#include <array>
+#include "G4Materials/NamedMaterialProvider.hh"
 
 class bcsTube {
 public:
-  /// straw ///
+    /// materials ///  
+  static G4Material* tubeWallMaterial;
+  static G4Material* tubeInnerGas;
+  static G4Material* strawWallMaterial;
+  static G4Material* converterMaterial;
+  static G4Material* countingGas;
+  
+    /// straw ///
   static double getStrawOuterRadius();
   static double getStrawInnerRadius();
   static double getStrawWallThickness();
@@ -14,7 +20,7 @@ public:
   static double getFrontTubeConverterThickness();
   static double getBackTubeConverterThickness();
 
-  /// tube ///
+    /// tube ///
   static double getTubeOuterRadius();
   static double getTubeInnerRadius();
 

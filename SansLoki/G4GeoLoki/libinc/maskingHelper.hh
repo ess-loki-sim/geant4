@@ -2,8 +2,6 @@
 #define G4GeoLoki_maskingHelper_hh
 
 #include "G4GeoLoki/pixelatedBanks.hh"
-#include <string>
-#include <array>
 
 class maskingHelper : public pixelatedBanks {
 public:

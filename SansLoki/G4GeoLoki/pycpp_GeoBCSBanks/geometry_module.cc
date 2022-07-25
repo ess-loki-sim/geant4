@@ -28,13 +28,13 @@ protected:
   virtual bool validateParameters();
 private:
   //Functions
-  G4LogicalVolume * createTubeLV(double converter_thickness, double straw_length);  // create the logical volume of a tube for easy placement in a panel
+  G4LogicalVolume * createTubeLV(double converter_thickness, double straw_length);
   G4LogicalVolume * createPackBoxLV(double strawLength, int packNumber, int numberOfPacksForInvertedNumbering, int numberOfPacks);
   G4LogicalVolume * createBankLV(int bankId);
   G4LogicalVolume * createTriangularMaskLV(int maskId);
   G4LogicalVolume * createCalibrationSlitMaskLV();
 
-  int getTubeNumber(int packNumber, int inPackTubeId, int numberOfPacksForInvertedNumbering, int numberOfPacks);
+  int getTubeVolumeNumber(int packNumber, int inPackTubeId, int numberOfPacksForInvertedNumbering, int numberOfPacks);
 };
 
 // this line is necessary to be able to declare the geometry in the python simulation script 
@@ -62,45 +62,32 @@ GeoBCS::GeoBCS()
   addParameterBoolean("old_tube_numbering", false);
   
   addParameterString("world_material","G4_Vacuum");
-  addParameterString("pack_box_fill_material", "G4_Vacuum");
-  addParameterString("B4C_panel_material","ESS_B4C:b10_enrichment=0.95"); //TODO  B4C S-DOUGH IS AN 18% EPOXY RESIN, 82% BORON CARBIDE MIX.IT IS MANUFACTURED BY STFC's ADVANCED MATERIALS GROUP.
-  addParameterString("converter_material","ESS_B4C:b10_enrichment=0.95");
-  addParameterString("counting_gas","IdealGas:formula=0.8*Ar+0.2*CO2:pressure_atm=0.7");
-  addParameterString("tube_inner_gas","IdealGas:formula=0.8*Ar+0.2*CO2:pressure_atm=0.7");    /// corrected to 80:20 Ar:CO2 ratio (04/06/2019)
-  addParameterString("tube_wall_material", "NCrystal:cfg=Al_sg225.ncmat");
-  addParameterString("straw_wall_material", "NCrystal:cfg=Cu_sg225.ncmat");
+  addParameterString("B4C_panel_material","ESS_B4C:b10_enrichment=0.95"); 
 }
 
 G4LogicalVolume * GeoBCS::createTubeLV(double converterThickness, double strawLength){
-  auto tubeWallMaterial = getParameterMaterial("tube_wall_material");
-  auto tubeInnerGas = getParameterMaterial("tube_inner_gas");
-  auto strawWallMaterial = getParameterMaterial("straw_wall_material");
-  auto converterMaterial = getParameterMaterial("converter_material");
-  auto counting_gas = getParameterMaterial("counting_gas");
-
-  const double strawInnerRadius = banks->tubes->getStrawInnerRadius();
   const double effectiveStrawLength = strawLength - banks->tubes->getStrawWallThickness(); //This is only epsilon difference...
 
   auto lv_tube = new G4LogicalVolume(new G4Tubs("TubeWall",0,  banks->tubes->getTubeOuterRadius(), 0.5*strawLength, 0., 2*M_PI),
-                                     tubeWallMaterial, "TubeWall");
+                                     banks->tubes->tubeWallMaterial, "TubeWall");
 
   auto lv_empty_tube = place(new G4Tubs("EmptyTube", 0., banks->tubes->getTubeInnerRadius(), 0.5*strawLength, 0., 2*M_PI),
-                                           tubeInnerGas, 0,0,0, lv_tube, G4Colour(0,1,1),-2,0,0).logvol;
+                             banks->tubes->tubeInnerGas, 0,0,0, lv_tube, G4Colour(0,1,1),-2,0,0).logvol;
   
   for (int cpNo = 0; cpNo <= 6; cpNo++){
-    auto lv_straw_wall = place(new G4Tubs("StrawWall", 0, banks->tubes->getStrawOuterRadius(), 0.5 * strawLength, 0., 2 * M_PI),
-                               strawWallMaterial, banks->tubes->getStrawPositionX(cpNo), banks->tubes->getStrawPositionY(cpNo), 0, lv_empty_tube, ORANGE, cpNo, 0, 0).logvol;
+    auto lv_straw_wall = place(new G4Tubs("StrawWall", 0, banks->tubes->getStrawOuterRadius(), 0.5*strawLength, 0., 2 * M_PI),
+                               banks->tubes->strawWallMaterial, banks->tubes->getStrawPositionX(cpNo), banks->tubes->getStrawPositionY(cpNo), 0, lv_empty_tube, ORANGE, cpNo, 0, 0).logvol;
 
-    auto lv_converter = place(new G4Tubs("Converter", 0., strawInnerRadius, 0.5*effectiveStrawLength, 0., 2 * M_PI),
-                              converterMaterial, 0, 0, 0, lv_straw_wall, G4Colour(0, 1, 1), cpNo + 100, 0, 0).logvol;
+    auto lv_converter = place(new G4Tubs("Converter", 0., banks->tubes->getStrawInnerRadius(), 0.5*effectiveStrawLength, 0., 2 * M_PI),
+                              banks->tubes->converterMaterial, 0, 0, 0, lv_straw_wall, G4Colour(0, 1, 1), cpNo + 100, 0, 0).logvol;
 
-    place(new G4Tubs("CountingGas", 0., strawInnerRadius - converterThickness, 0.5 * effectiveStrawLength, 0., 2 * M_PI),
-          counting_gas, 0, 0, 0, lv_converter, G4Colour(0, 0, 1), 0, 0, 0);
+    place(new G4Tubs("CountingGas", 0., banks->tubes->getStrawInnerRadius() - converterThickness, 0.5*effectiveStrawLength, 0., 2 * M_PI),
+          banks->tubes->countingGas, 0, 0, 0, lv_converter, G4Colour(0, 0, 1), 0, 0, 0);
   }
   return lv_tube;
 }
 
-int GeoBCS::getTubeNumber(int packNumber, int inPackTubeId, int numberOfPacksForInvertedNumbering, int numberOfPacks){
+int GeoBCS::getTubeVolumeNumber(int packNumber, int inPackTubeId, int numberOfPacksForInvertedNumbering, int numberOfPacks){
   assert(0 <= inPackTubeId && inPackTubeId <= 7);
   const double rowNumber = packNumber + 0.5* ((int)inPackTubeId/4); // +0.5 for second row (inPackTubeId > 3)
   inPackTubeId %= 4;
@@ -127,9 +114,9 @@ int GeoBCS::getTubeNumber(int packNumber, int inPackTubeId, int numberOfPacksFor
 
 ///////////  CREATE PACK BOX LOGICAL VOLUME  //////////////////////////
 G4LogicalVolume *GeoBCS::createPackBoxLV(double strawLength, int packNumber, int numberOfPacksForInvertedNumbering, int numberOfPacks){
-  auto pack_fill_material = getParameterMaterial("pack_box_fill_material");
-  auto lv_pack_box = new G4LogicalVolume(new G4Box("EmptyPackBox", 0.5*banks->packs->getPackBoxWidth(), 0.5*banks->packs->getPackBoxHeight(), 0.5 * strawLength + banks->packs->getPackBoxIdleLengthOnOneEnd()), pack_fill_material, "EmptyPackBox");
+  auto lv_pack_box = new G4LogicalVolume(new G4Box("EmptyPackBox", 0.5*banks->packs->getPackBoxWidth(), 0.5*banks->packs->getPackBoxHeight(), 0.5 * strawLength + banks->packs->getPackBoxIdleLengthOnOneEnd()), banks->packs->packBoxFillMaterial, "EmptyPackBox");
   /// Add 8 bcs detector tubes ///
+
   auto lv_front_tube = createTubeLV(banks->tubes->getFrontTubeConverterThickness(), strawLength); 
   auto lv_back_tube = createTubeLV(banks->tubes->getBackTubeConverterThickness(), strawLength); 
   G4RotationMatrix* tubeRotationMatrix = new G4RotationMatrix(0, 0, banks->packs->getTubeRotation());
@@ -137,24 +124,21 @@ G4LogicalVolume *GeoBCS::createPackBoxLV(double strawLength, int packNumber, int
   for (int inPackTubeId = 0; inPackTubeId < 8; inPackTubeId++) {
     place((inPackTubeId % 4 < 2) ? lv_front_tube : lv_back_tube, 
           banks->packs->getHorizontalTubeOffset(inPackTubeId), banks->packs->getVerticalTubeOffset(inPackTubeId), 0, 
-          lv_pack_box, SILVER, getTubeNumber(packNumber, inPackTubeId, numberOfPacksForInvertedNumbering, numberOfPacks), 0, tubeRotationMatrix);
+          lv_pack_box, SILVER, getTubeVolumeNumber(packNumber, inPackTubeId, numberOfPacksForInvertedNumbering, numberOfPacks), 0, tubeRotationMatrix);
   }
   /// Add B4C panel behind detectors in 3 parts ///
-  auto B4C_panel_material = getParameterMaterial("B4C_panel_material");
   const double B4CLengthHalf = 0.5*strawLength + banks->packs->getB4CLengthOverStrawOnOneEnd();
 
   for (int partId = 0; partId < 3; partId++){
     place(new G4Box("B4CPanel", 0.5*banks->packs->getB4CPartThickness(partId), 0.5*banks->packs->getB4CPartHeight(partId), B4CLengthHalf), 
-          B4C_panel_material, 
+          banks->packs->B4CPanelMaterial, 
           banks->packs->getB4CPartHorizontalOffset(partId), banks->packs->getB4CPartVerticalOffset(partId), 0, 
           lv_pack_box, G4Colour(0, 1, 0), -2, 0, new G4RotationMatrix());
     }
   /// Add Al behing the B4C panel in 2 parts ///
-  auto Al_panel_material = getParameterMaterial("tube_wall_material");
-
   for (int partId = 0; partId < 2; partId++){
     place(new G4Box("AlPanel", 0.5*banks->packs->getAlPartThickness(partId), 0.5*banks->packs->getAlPartHeight(partId), B4CLengthHalf), 
-          Al_panel_material,
+          banks->packs->AlPanelMaterial,
           banks->packs->getAlPartHorizontalOffset(partId),  banks->packs->getAlPartVerticalOffset(partId), 0,
           lv_pack_box, SILVER, -2, 0, new G4RotationMatrix());
     }
@@ -165,7 +149,7 @@ G4LogicalVolume *GeoBCS::createPackBoxLV(double strawLength, int packNumber, int
 // B4C sheet(cadmium in real life) with holes(slits) cut into it, used for calibration at the LoKI rear bank experiment at Larmor(ISIS), with hardcoded parameters
 G4LogicalVolume *GeoBCS::createCalibrationSlitMaskLV(){
   const std::string maskName = "BoronMask-CalibrationSlits";
-  auto B4C_panel_material = getParameterMaterial("B4C_panel_material");
+  auto B4C_panel_material = getParameterMaterial("B4C_panel_material"); //TODO
 
   const double slitWidth = 3*Units::mm; // 3 mm wide slits
   const double slitWidthHalf =  0.5 * slitWidth; // 3 mm wide slits
@@ -204,13 +188,10 @@ G4LogicalVolume *GeoBCS::createCalibrationSlitMaskLV(){
 ///////////  CREATE DETECTOR BANK LOGICAL VOLUME  //////////////////////////
 
 G4LogicalVolume *GeoBCS::createBankLV(int bankId){
-  auto B4C_panel_material = getParameterMaterial("B4C_panel_material");
   const double strawLength = banks->getStrawLengthByBankId(bankId);
 
   const double pack_pack_distance = banks->getPackPackDistance();
   const int numberOfPacks = banks->getNumberOfPacksByBankId(bankId); 
-
-  auto pack_fill_material = getParameterMaterial("pack_box_fill_material");
   
   const double packRotation = banks->getPackRotation();
 
@@ -219,7 +200,7 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
   const double bankSizeZHalf = 0.5* banks->getBankSize(bankId, 2);
 
   auto lv_bank = new G4LogicalVolume(new G4Box("EmptyPanelBox", bankSizeZHalf, bankSizeYHalf, bankSizeXHalf),
-                                       pack_fill_material, "Bank");
+                                     banks->packs->packBoxFillMaterial, "Bank");
 
   // override lv_bank to subtract some empty part of front left and right banks where front top and bottom banks would overlap with them
   if (bankId == 8 || bankId == 6) {  
@@ -227,7 +208,7 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
     auto bankBoxCut = new G4Box("EmptyPanelBox", 15.0, 70.0, 60.0);
     auto bankBox = new G4SubtractionSolid("EmptyPanelBox", fullBankBox, bankBoxCut, 0, G4ThreeVector(-145.0, -42.0, -425.0));
     
-    lv_bank = new G4LogicalVolume(bankBox, pack_fill_material, "Bank");
+    lv_bank = new G4LogicalVolume(bankBox, banks->packs->packBoxFillMaterial, "Bank");
   }
 
   int numberOfPacksForInvertedNumbering = 0; 
@@ -244,7 +225,7 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
   for (int maskId = 0; maskId < numberOfBoronMasks; ++maskId){
     const std::string maskName = "BoronMask-"+std::to_string(bankId)+"-"+std::to_string(maskId);
     place(new G4Box(maskName, 0.5*banks->masks->getSize(bankId, maskId, 2), 0.5*banks->masks->getSize(bankId, maskId, 1), 0.5*banks->masks->getSize(bankId, maskId, 0)),
-            B4C_panel_material, 
+            banks->masks->maskMaterial, 
             banks->getBoronMaskPosition(bankId, maskId, 2), banks->getBoronMaskPosition(bankId, maskId, 1), banks->getBoronMaskPosition(bankId, maskId, 0), 
             lv_bank, BLACK, -2, 0, new G4RotationMatrix(0, 0, banks->masks->getRotation(bankId, maskId)));
   }
@@ -256,7 +237,7 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
     const double detBankFrontDistance = banks->detectorSystemFrontDistanceFromBankFront(bankId);
     
     place(new G4Box(maskName, 0.5 * 1*Units::mm, 0.5 * 5*Units::cm, 0.5 * 5*Units::cm),
-          B4C_panel_material,
+          banks->masks->maskMaterial,
           -bankSizeZHalf + detBankFrontDistance - 5*Units::cm, 0, 0,
           lv_bank, BLACK, -5, 0, new G4RotationMatrix());
   }
@@ -299,10 +280,9 @@ G4LogicalVolume *GeoBCS::createTriangularMaskLV(int maskId){
     auto cutCentre = G4ThreeVector(xCutDir * (xHalf - xCutHalf * cos(alpha) + yCutHalf * sin(alpha)), yCutDir * (-(ySideToCut - yHalf) + xCutHalf * sin(alpha) + yCutHalf * cos(alpha)), 0);
     auto triangularMask = new G4SubtractionSolid("TriangularMask", triangularMaskBox, triangularMaskCut, cutRotationMatrix, cutCentre);
 
-    auto B4C_panel_material = getParameterMaterial("B4C_panel_material");
     const int bankId = banks->masks->getBankIdOfTriangularMask(maskId);
     const std::string maskName = "BoronMask-triangular-"+std::to_string(bankId)+"-"+std::to_string(maskId);
-    auto lv_triangularMask = new G4LogicalVolume(triangularMask, B4C_panel_material, maskName);
+    auto lv_triangularMask = new G4LogicalVolume(triangularMask, banks->masks->maskMaterial, maskName);
 
     return lv_triangularMask;
 }

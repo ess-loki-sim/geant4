@@ -47,6 +47,7 @@ double bcsPack::getTubeCentreDistanceFromPackFront() {
 }
 
 
+G4Material* bcsPack::packBoxFillMaterial = NamedMaterialProvider::getMaterial("G4_Vacuum");
 double bcsPack::getPackBoxWidth() {
   return packBoxWidth;
 }
@@ -73,7 +74,7 @@ double bcsPack::getVerticalTubeOffset(const int inPackTubeId) {
 
 
 /// B4C panel parts ///
-
+G4Material* bcsPack::B4CPanelMaterial = NamedMaterialProvider::getMaterial("ESS_B4C:b10_enrichment=0.95"); //TODO B4C S-DOUGH IS AN 18% EPOXY RESIN, 82% BORON CARBIDE MIX.IT IS MANUFACTURED BY STFC's ADVANCED MATERIALS GROUP.
 double bcsPack::B4CLengthOverStrawOnOneEnd = 12.0 *Units::mm;
 double bcsPack::B4CDistanceFromLastTubeCentre = 23.0 *Units::mm;
 
@@ -129,7 +130,7 @@ double bcsPack::getB4CPartVerticalOffset(const int partId) {
 }
 
 /// Al panel parts ///
-
+G4Material* bcsPack::AlPanelMaterial = NamedMaterialProvider::getMaterial("NCrystal:cfg=Al_sg225.ncmat");
 double bcsPack::getAlPartThickness(const int partId){
   assert(0 <= partId && partId <= 1);
   if(partId==0) {

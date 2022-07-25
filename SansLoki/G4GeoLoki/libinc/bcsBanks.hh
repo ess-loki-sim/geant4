@@ -1,7 +1,6 @@
 #ifndef G4GeoLoki_bcsBanks_hh
 #define G4GeoLoki_bcsBanks_hh
 
-#include <string>
 #include <array>
 #include "G4GeoLoki/bcsTube.hh"
 #include "G4GeoLoki/bcsPack.hh"
