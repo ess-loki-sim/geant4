@@ -1,9 +1,9 @@
-#ifndef G4GeoLoki_bcsPack_hh
-#define G4GeoLoki_bcsPack_hh
+#ifndef G4GeoLoki_BcsPack_hh
+#define G4GeoLoki_BcsPack_hh
 
 #include "G4Materials/NamedMaterialProvider.hh"
 
-class bcsPack {
+class BcsPack {
 public:
   static double getHorizontalTubeDistanceInPack();
   static double getVerticalTubeDistanceInPack();

@@ -12,7 +12,7 @@
 #include <string> 
 #include <cassert>
 
-#include "G4GeoLoki/bcsBanks.hh"
+#include "G4GeoLoki/BcsBanks.hh"
 
 class GeoBCS : public G4Interfaces::GeoConstructBase
 {
@@ -21,7 +21,7 @@ public:
   virtual ~GeoBCS(){}
   virtual G4VPhysicalVolume* Construct();
   
-  bcsBanks * banks;
+  BcsBanks * banks;
 protected:
   virtual bool validateParameters();
 private:
@@ -30,7 +30,7 @@ private:
   G4LogicalVolume * createPackBoxLV(double strawLength, int packNumber, int numberOfPacksForInvertedNumbering, int numberOfPacks);
   G4LogicalVolume * createBankLV(int bankId);
   G4LogicalVolume * createTriangularMaskLV(int maskId);
-  G4LogicalVolume * createCalibrationMaskLV(calibMasks::calibMasksBase calibMask);
+  G4LogicalVolume * createCalibrationMaskLV(CalibMasks::CalibMasksBase calibMask);
 
   int getTubeVolumeNumber(int packNumber, int inPackTubeId, int numberOfPacksForInvertedNumbering, int numberOfPacks);
 };
@@ -141,7 +141,7 @@ G4LogicalVolume *GeoBCS::createPackBoxLV(double strawLength, int packNumber, int
 }
 
 ///////////  CREATE CALIBRATION SLIT LOGICAL VOLUME  //////////////////////////
-G4LogicalVolume *GeoBCS::createCalibrationMaskLV(calibMasks::calibMasksBase calibMask){
+G4LogicalVolume *GeoBCS::createCalibrationMaskLV(CalibMasks::CalibMasksBase calibMask){
   const std::string maskName = "BoronMask-"+calibMask.name;
   const double maskThicknessHalf = 0.5*calibMask.thickness;
   const double maskHeightHalf = 0.5*calibMask.height;
@@ -276,7 +276,7 @@ G4VPhysicalVolume* GeoBCS::Construct(){
   auto world_material = getParameterMaterial("world_material"); 
   const double sdd = getParameterDouble("rear_detector_distance_m")*Units::m;
 
-  banks = new bcsBanks(sdd);
+  banks = new BcsBanks(sdd);
 
   // calculate a value that is big enough to fit your world volume, the "super mother"
   double big_dimension = 1.1*( 1 *Units::m + sdd);

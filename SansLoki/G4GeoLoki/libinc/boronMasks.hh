@@ -1,10 +1,10 @@
-#ifndef G4GeoLoki_boronMasks_hh
-#define G4GeoLoki_boronMasks_hh
+#ifndef G4GeoLoki_BoronMasks_hh
+#define G4GeoLoki_BoronMasks_hh
 
 #include "G4Materials/NamedMaterialProvider.hh"
 #include <array>
 
-class boronMasks {
+class BoronMasks {
 public:
   static G4Material* maskMaterial;
   /// regular rectangular masks ///

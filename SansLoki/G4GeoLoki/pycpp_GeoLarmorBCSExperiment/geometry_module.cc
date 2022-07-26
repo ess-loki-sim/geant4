@@ -11,7 +11,7 @@
 #include <cmath>
 #include <string> 
 
-#include "G4GeoLoki/bcsBanks.hh"
+#include "G4GeoLoki/BcsBanks.hh"
 
 class GeoBCS : public G4Interfaces::GeoConstructBase
 {
@@ -20,7 +20,7 @@ public:
   virtual ~GeoBCS(){}
   virtual G4VPhysicalVolume* Construct();
   
-  bcsBanks * banks;
+  BcsBanks * banks;
 protected:
   virtual bool validateParameters();
 private:
@@ -171,7 +171,7 @@ G4VPhysicalVolume* GeoBCS::Construct(){
   const double generator_detector_distance = getParameterDouble("generator_detector_distance_cm")*Units::cm;
   const double sdd = getParameterDouble("rear_detector_distance_m")*Units::m;
 
-  banks = new bcsBanks(sdd);
+  banks = new BcsBanks(sdd);
 
   // calculate a value that is big enough to fit your world volume, the "super mother"
   double big_dimension = 1.1*( 1 *Units::m + generator_detector_distance + sdd);

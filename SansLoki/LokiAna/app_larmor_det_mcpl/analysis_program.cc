@@ -11,7 +11,7 @@
 #include <fstream>
 #include "MCPL/mcpl.h"
 
-#include "G4GeoLoki/bcsBanks.hh"
+// #include "G4GeoLoki/BcsBanks.hh"
 //Griff analysis. See https://confluence.esss.lu.se/display/DG/Griff for more info.
 
 #ifndef M_PI

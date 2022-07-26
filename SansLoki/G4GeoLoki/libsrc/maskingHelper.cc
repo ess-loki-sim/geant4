@@ -1,4 +1,4 @@
-#include "G4GeoLoki/maskingHelper.hh"
+#include "G4GeoLoki/MaskingHelper.hh"
 #include "Core/Units.hh"
 #include <cmath>
 #include <iostream>
@@ -6,14 +6,14 @@
 #include <cassert>
 
 //////// Utilities for getting the centre coordinates of a pixel ////////
-double maskingHelper::pixelCentrePosition[3] = { 0.0, 0.0, 0.0};
+double MaskingHelper::pixelCentrePosition[3] = { 0.0, 0.0, 0.0};
 
-double maskingHelper::getPixelCentrePosition(const int axisIndex){
+double MaskingHelper::getPixelCentrePosition(const int axisIndex){
   assert(0 <= axisIndex && axisIndex <= 2);
   return pixelCentrePosition[axisIndex];
 }
 
-void maskingHelper::calcPixelCentrePositionForMasking(const int pixelId) { 
+void MaskingHelper::calcPixelCentrePositionForMasking(const int pixelId) { 
   const bool isNewPixelNumbering = false;
   const int bankId = getBankId(pixelId);
   const int tubeId = getTubeId(pixelId, bankId);
@@ -105,14 +105,14 @@ void maskingHelper::calcPixelCentrePositionForMasking(const int pixelId) {
   return;
 }
 
-void maskingHelper::coordinateRotation(double &x, double &y, const double angle) {
+void MaskingHelper::coordinateRotation(double &x, double &y, const double angle) {
   double tempX = std::cos(angle) * x - std::sin(angle) * y;
   double tempY = std::sin(angle) * x + std::cos(angle) * y;
   x = tempX;
   y = tempY;
 }
 
-int maskingHelper::getBankId(const int pixelId) {
+int MaskingHelper::getBankId(const int pixelId) {
   for (int bankId = 0; bankId < 9; bankId++){
     if(pixelId < getBankPixelOffset(bankId+1)){
       return bankId;
@@ -121,13 +121,13 @@ int maskingHelper::getBankId(const int pixelId) {
   return 0; //this is an error case, could be handled properly
 }
 
-int maskingHelper::getTubeId(const int pixelId, const int bankId) {
+int MaskingHelper::getTubeId(const int pixelId, const int bankId) {
   const int pixelIdInBank = pixelId - getBankPixelOffset(bankId);
   const int numberOfPixelsInATube = getNumberOfPixelsInStraw(bankId) * 7;
   return (int) pixelIdInBank / numberOfPixelsInATube;
 }
 
-int maskingHelper::getStrawId(const int pixelId, const int bankId, const int tubeId) {
+int MaskingHelper::getStrawId(const int pixelId, const int bankId, const int tubeId) {
   const int pixelIdInBank = pixelId - getBankPixelOffset(bankId);
   const int pixelIdInTube = pixelIdInBank - tubeId * 7 * getNumberOfPixelsInStraw(bankId);
   return (int) pixelIdInTube / getNumberOfPixelsInStraw(bankId); 

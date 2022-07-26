@@ -1,21 +1,21 @@
-#ifndef G4GeoLoki_bcsBanks_hh
-#define G4GeoLoki_bcsBanks_hh
+#ifndef G4GeoLoki_BcsBanks_hh
+#define G4GeoLoki_BcsBanks_hh
 
 #include <array>
-#include "G4GeoLoki/bcsTube.hh"
-#include "G4GeoLoki/bcsPack.hh"
-#include "G4GeoLoki/boronMasks.hh"
-#include "G4GeoLoki/calibMasks.hh"
+#include "G4GeoLoki/BcsTube.hh"
+#include "G4GeoLoki/BcsPack.hh"
+#include "G4GeoLoki/BoronMasks.hh"
+#include "G4GeoLoki/CalibMasks.hh"
 
-class bcsBanks {
+class BcsBanks {
 public:
-  bcsBanks(double rearBankDistance): rearBankDistance(rearBankDistance){}
+  BcsBanks(double rearBankDistance): rearBankDistance(rearBankDistance){}
 
   /// bcs tubes ///
-  const static bcsTube* tubes;
+  const static BcsTube* tubes;
 
   /// bcs packs ///
-  const static bcsPack* packs;
+  const static BcsPack* packs;
 
   /// banks ///
   static double getPackRotation();
@@ -36,13 +36,13 @@ public:
   static bool areTubesInverselyNumbered(const int bankId);
 
   /// boron masks ///
-  const static boronMasks * masks;
+  const static BoronMasks * masks;
   static double getBoronMaskPosition(const int bankId, const int maskId, const int axisIndex);
   static double getTriangularBoronMaskPosition(const int maskId, const int axisIndex);
 
     /// calibration masks ///
-  const static calibMasks* calibMasks;
-  double getCalibMaskPosition(calibMasks::calibMasksBase calibMask,const int bankId, const int axisIndex) const;
+  const static CalibMasks* calibMasks;
+  double getCalibMaskPosition(CalibMasks::CalibMasksBase calibMask,const int bankId, const int axisIndex) const;
 
 private:
   double rearBankDistance;

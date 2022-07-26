@@ -1,9 +1,9 @@
-#ifndef G4GeoLoki_bcsTube_hh
-#define G4GeoLoki_bcsTube_hh
+#ifndef G4GeoLoki_BcsTube_hh
+#define G4GeoLoki_BcsTube_hh
 
 #include "G4Materials/NamedMaterialProvider.hh"
 
-class bcsTube {
+class BcsTube {
 public:
     /// materials ///  
   static G4Material* tubeWallMaterial;

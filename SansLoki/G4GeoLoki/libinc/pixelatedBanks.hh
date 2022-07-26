@@ -1,12 +1,12 @@
-#ifndef G4GeoLoki_pixelatedBanks_hh
-#define G4GeoLoki_pixelatedBanks_hh
+#ifndef G4GeoLoki_PixelatedBanks_hh
+#define G4GeoLoki_PixelatedBanks_hh
 
-#include "G4GeoLoki/bcsBanks.hh"
+#include "G4GeoLoki/BcsBanks.hh"
 
-class pixelatedBanks : public bcsBanks{
+class PixelatedBanks : public BcsBanks{
 public:
-  pixelatedBanks(double rearBankDistance): bcsBanks(rearBankDistance){} //use default rearBankPixelNumber
-  pixelatedBanks(double rearBankDistance, int rearBankPixelNumber): bcsBanks(rearBankDistance){
+  PixelatedBanks(double rearBankDistance): BcsBanks(rearBankDistance){} //use default rearBankPixelNumber
+  PixelatedBanks(double rearBankDistance, int rearBankPixelNumber): BcsBanks(rearBankDistance){
     numberOfPixelsInStraw[0] = rearBankPixelNumber;
   }
 

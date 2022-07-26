@@ -11,7 +11,7 @@
 #include <fstream>
 #include "MCPL/mcpl.h"
 
-#include "G4GeoLoki/pixelatedBanks.hh"
+#include "G4GeoLoki/PixelatedBanks.hh"
 //Griff analysis. See https://confluence.esss.lu.se/display/DG/Griff for more info.
 
 #ifndef M_PI
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
   const int rearBankPixelNumber = 256;
   printf("HARDCODED rear bank pixel number for analysis: %d\n", rearBankPixelNumber);
 
-  pixelatedBanks banks = pixelatedBanks(sampleDetectorDistance, rearBankPixelNumber);
+  PixelatedBanks banks = PixelatedBanks(sampleDetectorDistance, rearBankPixelNumber);
   const int numberOfPixels = banks.getTotalNumberOfPixels();
 
   auto h_neutron_pixel_geantino = hc.book2D("Show pixels the geantinos entered", 256, 0, 256, numberOfPixels / 256, 0, numberOfPixels / 256, "h_neutron_pixel_geantino");

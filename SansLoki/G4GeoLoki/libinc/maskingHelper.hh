@@ -1,11 +1,11 @@
-#ifndef G4GeoLoki_maskingHelper_hh
-#define G4GeoLoki_maskingHelper_hh
+#ifndef G4GeoLoki_MaskingHelper_hh
+#define G4GeoLoki_MaskingHelper_hh
 
-#include "G4GeoLoki/pixelatedBanks.hh"
+#include "G4GeoLoki/PixelatedBanks.hh"
 
-class maskingHelper : public pixelatedBanks {
+class MaskingHelper : public PixelatedBanks {
 public:
-  using pixelatedBanks::pixelatedBanks; //inherit constructors of pixelatedBanks 
+  using PixelatedBanks::PixelatedBanks; //inherit constructors of PixelatedBanks 
 
   void calcPixelCentrePositionForMasking(const int pixelId);
   double getPixelCentrePosition(const int axisIndex);

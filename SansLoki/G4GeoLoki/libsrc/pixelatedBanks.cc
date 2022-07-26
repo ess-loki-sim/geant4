@@ -1,11 +1,11 @@
-#include "G4GeoLoki/pixelatedBanks.hh"
+#include "G4GeoLoki/PixelatedBanks.hh"
 #include "Core/Units.hh"
 #include <cmath>
 #include <iostream>
 #include <array>
 #include <cassert>
 
-int pixelatedBanks::numberOfPixelsInStraw[9] = { // number of pixels along the straws
+int PixelatedBanks::numberOfPixelsInStraw[9] = { // number of pixels along the straws
     //16384, // 0 - rear (used for CalibSlitSourceGen) 
     256, // 0 - rear
     256,  // 1 - mid top
@@ -17,21 +17,21 @@ int pixelatedBanks::numberOfPixelsInStraw[9] = { // number of pixels along the s
     256, // 7 - front bottom
     256, // 8 - front right
 };
-int pixelatedBanks::getNumberOfPixelsInStraw(const int bankId) {
+int PixelatedBanks::getNumberOfPixelsInStraw(const int bankId) {
   assert(0 <= bankId && bankId <= 8);
   return numberOfPixelsInStraw[bankId];
 }
 
-int pixelatedBanks::getNumberOfPixels(const int bankId) {
+int PixelatedBanks::getNumberOfPixels(const int bankId) {
   const int numberOfStrawsInBank = getNumberOfTubes(bankId) * 7;
   return numberOfStrawsInBank * getNumberOfPixelsInStraw(bankId);
 }
 
-int pixelatedBanks::getTotalNumberOfPixels() {
+int PixelatedBanks::getTotalNumberOfPixels() {
   return getBankPixelOffset(9);
 }
 
-int pixelatedBanks::getBankPixelOffset(const int bankId) {
+int PixelatedBanks::getBankPixelOffset(const int bankId) {
   assert(0 <= bankId && bankId <= 9);
   int offset = 0;
   for (int bankIndex = 0; bankIndex < bankId; bankIndex++) {
@@ -41,7 +41,7 @@ int pixelatedBanks::getBankPixelOffset(const int bankId) {
   return offset;
 }
 
-int pixelatedBanks::getPositionPixelId(const int bankId, const double positionX, const double positionY) const{
+int PixelatedBanks::getPositionPixelId(const int bankId, const double positionX, const double positionY) const{
   const double pixelLength = getStrawLengthByBankId(bankId) / getNumberOfPixelsInStraw(bankId);
 
   if (isVertical(bankId)) { //vertical straw
@@ -55,7 +55,7 @@ int pixelatedBanks::getPositionPixelId(const int bankId, const double positionX,
   }
 }
 
-int pixelatedBanks::getPixelId(const int bankId, const int tubeId, const int strawId, const double positionX, const double positionY) const{
+int PixelatedBanks::getPixelId(const int bankId, const int tubeId, const int strawId, const double positionX, const double positionY) const{
   const int bankPixelOffset = getBankPixelOffset(bankId);
   const int strawPixelOffset = (tubeId * 7 + strawId) * getNumberOfPixelsInStraw(bankId);
   const int positionPixelId = getPositionPixelId(bankId, positionX, positionY);
