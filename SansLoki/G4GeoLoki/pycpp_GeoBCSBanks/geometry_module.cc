@@ -170,7 +170,7 @@ G4LogicalVolume *GeoBCS::createCalibrationMaskLV(CalibMasks::CalibMasksBase cali
 G4LogicalVolume *GeoBCS::createBankLV(int bankId){
   const double strawLength = banks->getStrawLengthByBankId(bankId);
 
-  const double pack_pack_distance = banks->getPackPackDistance();
+  // const double pack_pack_distance = banks->getPackPackDistance();
   const int numberOfPacks = banks->getNumberOfPacksByBankId(bankId); 
   
   const double packRotation = banks->getPackRotation();
@@ -198,7 +198,9 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
 
   for (int packNumber = 0; packNumber < numberOfPacks; ++packNumber){
     auto lv_pack_box = createPackBoxLV(strawLength, packNumber, numberOfPacksForInvertedNumbering, numberOfPacks);         
-    place(lv_pack_box, banks->getTopmostPackPositionInBank(bankId, 2), -(packNumber * pack_pack_distance - banks->getTopmostPackPositionInBank(bankId, 1)), banks->getTopmostPackPositionInBank(bankId, 0), lv_bank, G4Colour(0, 1, 1), -2, 0, new G4RotationMatrix(0, 0, packRotation));
+    place(lv_pack_box, 
+          banks->getPackPositionInBank(bankId, packNumber, 2), banks->getPackPositionInBank(bankId, packNumber, 1), banks->getPackPositionInBank(bankId, packNumber, 0), 
+          lv_bank, G4Colour(0, 1, 1), -2, 0, new G4RotationMatrix(0, 0, packRotation));
   }
 
   const int numberOfBoronMasks = banks->masks->getNumberOfBoronMasks(bankId);

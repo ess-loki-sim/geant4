@@ -47,7 +47,7 @@ class CalibrationSlitSourceGen(G4CustomPyGen.GenBase):
         # Direction - toward the centre of a pixel
         #bank pixel limits: 0, 401408, 516096, 602112, 716800, 802816, 1003520, 1232896, 1376256, 1605632
         pixelId = ((self._i + 0) % self.totalNumberOfPixels) 
-        self.aimHelper.calcPixelCentrePositionForMasking(pixelId) # self._i + math.floor(self.rand()*256) + 401408  # 17*7*256 + 256
+        self.aimHelper.calcPixelCentrePositionForMasking(pixelId, True) # self._i + math.floor(self.rand()*256) + 401408  # 17*7*256 + 256
         
         pixelCentreX = self.aimHelper.getPixelCentrePosition(0)
         pixelCentreY = self.aimHelper.getPixelCentrePosition(1) -207.94792 #-214.975 # - 211.94792  #magical offset of the bank...

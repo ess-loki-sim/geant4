@@ -20,7 +20,7 @@ public:
   /// banks ///
   static double getPackRotation();
   static double getPackPackDistance();// TODO better name?
-  static double getTopmostPackPositionInBank(const int bankId, const int axisIndex); // 0 - x, 1 - y, 2 - z
+  static double getPackPositionInBank(const int bankId, const int packNumber, const int axisIndex);// 0 - x, 1 - y, 2 - z 
 
   static double getStrawLengthByBankId(const int bankId);
   static int getNumberOfPacksByBankId(const int bankId); 
@@ -64,6 +64,7 @@ private:
   const static double bankPositionOffset[9][3]; 
   const static double bankSize[9][3];
   const static double topmostPackHolderPositionInBankFromTopFront[9][2];
+  static double getTopmostPackPositionInBank(const int bankId, const int axisIndex);
   static double packHolderToPackCentreCoordsInPack(const int axisIndex);
 
   const static double bankDistance[9];

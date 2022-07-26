@@ -7,7 +7,7 @@ pixelFile = open("pixelFile_oldNumbering.txt", "w")
 numberOfPixels = aimHelper.getTotalNumberOfPixels()
 
 for pixelId in range(numberOfPixels):
-  aimHelper.calcPixelCentrePositionForMasking(pixelId)
+  aimHelper.calcPixelCentrePositionForMasking(pixelId, True)
 
   pixelCentreX = aimHelper.getPixelCentrePosition(0) 
   pixelCentreY = aimHelper.getPixelCentrePosition(1) -207.94792 #-214.975 #Larmor vertical offset

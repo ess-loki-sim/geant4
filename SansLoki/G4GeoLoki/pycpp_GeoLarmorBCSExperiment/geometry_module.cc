@@ -124,7 +124,7 @@ G4LogicalVolume *GeoBCS::createPackBoxLV(double strawLength, int packNumber, int
 ///////////  CREATE DETECTOR BANK LOGICAL VOLUME  //////////////////////////
 G4LogicalVolume *GeoBCS::createBankLV(int bankId){
   const double pack_pack_distance = banks->getPackPackDistance();
-  const int numberOfPacks = 4; //banks->getNumberOfPacksByBankId(bankId); 
+  const int numberOfPacks = 4;
   
   const double packRotation = banks->getPackRotation();
 
@@ -137,12 +137,13 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
 
   const int numberOfPacksForInvertedNumbering = 0;
 
-  const double bankPositionZ = banks->getTopmostPackPositionInBank(bankId, 2);
   const double topmostBankPositionY = 2 * pack_pack_distance + 45.00 *Units::mm;
   for (int packNumber = 0; packNumber < numberOfPacks; ++packNumber){
     double strawLength = packNumber < 2 ? 1500.0 * Units::mm : 1200.0 * Units::mm;
     auto lv_pack_box = createPackBoxLV(strawLength, packNumber, numberOfPacksForInvertedNumbering);         
-    place(lv_pack_box, bankPositionZ, topmostBankPositionY - packNumber * pack_pack_distance, 0, lv_bank, G4Colour(0, 1, 1), -2, 0, new G4RotationMatrix(0, 0, packRotation));
+    place(lv_pack_box, 
+    banks->getPackPositionInBank(bankId, packNumber, 2), topmostBankPositionY - packNumber * pack_pack_distance, 0, 
+    lv_bank, G4Colour(0, 1, 1), -2, 0, new G4RotationMatrix(0, 0, packRotation));
   }
 
   // Add BeamStop to the Rear Bank volume

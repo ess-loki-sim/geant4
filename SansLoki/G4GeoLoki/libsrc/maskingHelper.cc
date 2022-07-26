@@ -6,102 +6,57 @@
 #include <cassert>
 
 //////// Utilities for getting the centre coordinates of a pixel ////////
-double MaskingHelper::pixelCentrePosition[3] = { 0.0, 0.0, 0.0};
+double MaskingHelper::pixelCentrePosition[3] = { 0.0, 0.0, 0.0 };
 
-double MaskingHelper::getPixelCentrePosition(const int axisIndex){
+double MaskingHelper::getPixelCentrePosition(const int axisIndex) const{
   assert(0 <= axisIndex && axisIndex <= 2);
   return pixelCentrePosition[axisIndex];
 }
 
-void MaskingHelper::calcPixelCentrePositionForMasking(const int pixelId) { 
-  const bool isNewPixelNumbering = false;
+void MaskingHelper::calcPixelCentrePositionForMasking(const int pixelId, const bool isNewPixelNumbering) { 
   const int bankId = getBankId(pixelId);
   const int tubeId = getTubeId(pixelId, bankId);
+  const int inPackTubeId = getInPackTubeId(bankId, tubeId, isNewPixelNumbering);
+  const int packId = getPackId(bankId, tubeId, isNewPixelNumbering);
   const int strawId = getStrawId(pixelId, bankId, tubeId);
-  const int locPixelId = pixelId % getNumberOfPixelsInStraw(bankId);
-  
-  
-  ///////// pixel in straw /////////
-  const double pixelLength = getStrawLengthByBankId(bankId) / getNumberOfPixelsInStraw(bankId);
-  //const int vertical = isVertical(bankId);
-  double positionZ = 0.0;
 
-  /*
-  if (vertical) { //vertical straw
-    positionZ = - 0.5* strawLengthInBank[bankId] + (locPixelId + 0.5) * pixelLength;
-  }
-  else { //horizontal straw - pixels are numbered in minus x direction
-    const int invertedPixelId = (numberOfPixelsInStraw[bankId] - 1) - locPixelId;
-    positionZ = - 0.5* strawLengthInBank[bankId] + (invertedPixelId + 0.5) * pixelLength;
-    std::cout<<"\n locPixelId:"<<locPixelId<<"\t before: "<<positionZ << "\t";
-    positionZ = 0.5* strawLengthInBank[bankId] - (locPixelId + 0.5) * pixelLength;
-    std::cout<<" after: "<<positionZ << "\n";
-  }*/
-  positionZ = - 0.5* getStrawLengthByBankId(bankId) + (locPixelId + 0.5) * pixelLength;
+  ///////// pixel in straw /////////
+  double positionZ = getPixelPositionInStraw(pixelId, bankId);
 
   ///////// straw in tube /////////
   double positionX = tubes->getStrawPositionX(strawId);
   double positionY = tubes->getStrawPositionY(strawId);
 
   ///////// tube in pack ///////// 
-  const double tubeRotation = packs->getTubeRotation();
-  const double horizontalOffset = packs->getHorizontalTubeCentreOffsetInPack();
-  const int numberOfPacks = getNumberOfPacksByBankId(bankId);
-  const int newTubeIdConvertedToOldId = ((tubeId % 2) * 4) + ((int) tubeId / (numberOfPacks * 2));
-  const int inPackTubeId = isNewPixelNumbering ? 
-                           areTubesInverselyNumbered(bankId) ? (newTubeIdConvertedToOldId + 4) % 8 : newTubeIdConvertedToOldId % 8 :
-                           areTubesInverselyNumbered(bankId) ? (tubeId + 4) % 8 : tubeId % 8;
-  const double horizontalTubeDistance = packs->getHorizontalTubeDistanceInPack();
-  const double topRowOffset = packs->getTopRowOffsetInPack();  
-  const double verticalOffset = 0.5*packs->getVerticalTubeDistanceInPack(); 
-  
   // apply tube rotation
-  coordinateRotation(positionX, positionY, tubeRotation);
-
+  coordinateRotation(positionX, positionY, packs->getTubeRotation());
   // place tube in pack
-  positionX += horizontalOffset + (double) (inPackTubeId % 4) * horizontalTubeDistance;
-  if (inPackTubeId < 4) { positionX += topRowOffset; }
-  positionY += (inPackTubeId < 4) ? verticalOffset : -verticalOffset;
+  positionX += packs->getHorizontalTubeOffset(inPackTubeId);
+  positionY += packs->getVerticalTubeOffset(inPackTubeId);
 
   ///////// pack in bank /////////
-  const double pack_pack_distance = getPackPackDistance();
-  const double packRotation = getPackRotation();
-  
-  const int normalPackId = isNewPixelNumbering ? 
-                           (int) (tubeId % (numberOfPacks * 2)) / 2 :
-                           (int) tubeId / 8;
-  const int packNumber = !areTubesInverselyNumbered(bankId) ? normalPackId : ((numberOfPacks - 1) - normalPackId);
-
   // apply pack rotation
-  coordinateRotation(positionX, positionY, packRotation);
-
+  coordinateRotation(positionX, positionY, getPackRotation());
   // place pack in bank
-  positionX += getTopmostPackPositionInBank(bankId, 2);
-  positionY += -(packNumber * pack_pack_distance - getTopmostPackPositionInBank(bankId, 1));
-  positionZ += getTopmostPackPositionInBank(bankId, 0);
+  positionX += getPackPositionInBank(bankId, packId, 2);
+  positionY += getPackPositionInBank(bankId, packId, 1);
+  positionZ += getPackPositionInBank(bankId, packId, 0);
 
   ///////// bank position /////////
-  const double rotateZ = getBankRotation(bankId, 2);
-  const double rotateX = getBankRotation(bankId, 0);
-  const double rotateY = -getBankRotation(bankId, 1);
-
-  // apply bank rotation
-  coordinateRotation(positionY, positionX, rotateZ); // Assuming left-handed coordinate sytem
-  coordinateRotation(positionZ, positionY, rotateX);
-  coordinateRotation(positionZ, positionX, rotateY);
-
+  // apply bank rotations
+  coordinateRotation(positionY, positionX, getBankRotation(bankId, 2)); // Assuming left-handed coordinate sytem
+  coordinateRotation(positionZ, positionY, getBankRotation(bankId, 0));
+  coordinateRotation(positionZ, positionX, -getBankRotation(bankId, 1));
   // place bank in world 
   positionX += getBankPosition(bankId, 0);
   positionY += getBankPosition(bankId, 1);
   positionZ += getBankPosition(bankId, 2);
   
-  ///////// END - set values as class properties for output /////////
+  ///////// END - set values /////////
   pixelCentrePosition[0] = positionX;
   pixelCentrePosition[1] = positionY;
   pixelCentrePosition[2] = positionZ;
 
-  //const int packId = (int) tubeId / 8;
-  //std::cout<< "pixelId: " << pixelId << '\t' <<"bankId: " << bankId << '\t' <<"packId: " << packId << '\t' <<"tubeId: " << tubeId << '\t' <<"strawId: " << strawId << '\t' <<"locPixeId: " << locPixelId << "vertical: " << vertical <<'\n' ; 
   return;
 }
 
@@ -121,6 +76,26 @@ int MaskingHelper::getBankId(const int pixelId) {
   return 0; //this is an error case, could be handled properly
 }
 
+int MaskingHelper::getPackId(const int bankId, const int tubeId, const bool isNewPixelNumbering) {
+  const int numberOfPacks = getNumberOfPacksByBankId(bankId);
+  const int normalPackId = isNewPixelNumbering ? 
+                           (int) (tubeId % (numberOfPacks * 2)) / 2 :
+                           (int) tubeId / 8;
+  return !areTubesInverselyNumbered(bankId) ? normalPackId : ((numberOfPacks - 1) - normalPackId);
+}
+
+int MaskingHelper::getInPackTubeId(const int bankId, const int tubeId, const bool isNewPixelNumbering) {
+  const int numberOfPacks = getNumberOfPacksByBankId(bankId);
+  const int newTubeIdConvertedToOldId = ((tubeId % 2) * 4) + ((int) tubeId / (numberOfPacks * 2));
+  
+  if(isNewPixelNumbering){
+    return areTubesInverselyNumbered(bankId) ? (newTubeIdConvertedToOldId + 4) % 8 : newTubeIdConvertedToOldId % 8;
+  }
+  else{
+    return areTubesInverselyNumbered(bankId) ? (tubeId + 4) % 8 : tubeId % 8;
+  }
+}
+
 int MaskingHelper::getTubeId(const int pixelId, const int bankId) {
   const int pixelIdInBank = pixelId - getBankPixelOffset(bankId);
   const int numberOfPixelsInATube = getNumberOfPixelsInStraw(bankId) * 7;
@@ -131,4 +106,11 @@ int MaskingHelper::getStrawId(const int pixelId, const int bankId, const int tub
   const int pixelIdInBank = pixelId - getBankPixelOffset(bankId);
   const int pixelIdInTube = pixelIdInBank - tubeId * 7 * getNumberOfPixelsInStraw(bankId);
   return (int) pixelIdInTube / getNumberOfPixelsInStraw(bankId); 
+}
+
+double MaskingHelper::getPixelPositionInStraw(const int pixelId, const int bankId) {
+  const int locPixelId = pixelId % getNumberOfPixelsInStraw(bankId);
+  const double pixelLength = getStrawLengthByBankId(bankId) / getNumberOfPixelsInStraw(bankId);
+
+  return - 0.5* getStrawLengthByBankId(bankId) + (locPixelId + 0.5) * pixelLength;
 }

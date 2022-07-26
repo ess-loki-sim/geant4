@@ -230,6 +230,17 @@ double BcsBanks::getTopmostPackPositionInBank(const int bankId, const int axisIn
   }
 }
 
+double BcsBanks::getPackPositionInBank(const int bankId, const int packNumber, const int axisIndex) {
+  assert(0 <= axisIndex && axisIndex <= 2);
+  if(axisIndex == 0 || axisIndex == 2) {
+    return getTopmostPackPositionInBank(bankId, axisIndex);
+  }
+  else{
+    return getTopmostPackPositionInBank(bankId, axisIndex) - packNumber * getPackPackDistance();
+  }
+}
+
+
 double BcsBanks::packHolderToFirstTubeCentreCoordsInPack(const int axisIndex) {
   assert(1 <= axisIndex && axisIndex <= 2);
   if(axisIndex == 1) { //y
