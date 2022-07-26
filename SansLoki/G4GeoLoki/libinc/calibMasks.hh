@@ -30,7 +30,7 @@ public:
   static G4Material* maskBoxMaterial;
 
 private:
-  static std::map<std::string, calibMasks::calibMasksBase> masks;
+  const static std::map<std::string, calibMasks::calibMasksBase> masks;
 };
 
 #endif

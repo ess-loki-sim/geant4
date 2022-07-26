@@ -23,16 +23,16 @@ public:
 private:
   /// regular rectangular masks ///
   static double getBoronMaskParameter(const int bankId, const int maskId, const int parameterIndex); 
-  static std::array<std::array<double, 7>, 6> rearBoronMasks;
-  static std::array<std::array<double, 7>, 8> midVerticalBoronMasks;
-  static std::array<std::array<double, 7>, 8> midHorizontalBoronMasks;
-  static std::array<std::array<double, 7>, 8> frontTopBoronMasks;
-  static std::array<std::array<double, 7>, 8> frontBottomBoronMasks; 
-  static std::array<std::array<double, 7>, 8> frontVerticalBoronMasks;
+  const static std::array<std::array<double, 7>, 6> rearBoronMasks;
+  const static std::array<std::array<double, 7>, 8> midVerticalBoronMasks;
+  const static std::array<std::array<double, 7>, 8> midHorizontalBoronMasks;
+  const static std::array<std::array<double, 7>, 8> frontTopBoronMasks;
+  const static std::array<std::array<double, 7>, 8> frontBottomBoronMasks; 
+  const static std::array<std::array<double, 7>, 8> frontVerticalBoronMasks;
 
   /// triangular masks ///
   static double getTriangularBoronMaskParameter(const int maskId, const int parameterIndex);
-  static std::array<std::array<double, 10>, 4> triangularBoronMasks;
+  const static std::array<std::array<double, 10>, 4> triangularBoronMasks;
 };
 
 #endif

@@ -41,25 +41,25 @@ public:
   static double getAlPartVerticalOffset(const int partId);
 
 private:
-  static double tubeGridParallelogramBase;
-  static double tubeGridParallelogramSide;
-  static double tubeGridParallelogramAngle;
+  const static double tubeGridParallelogramBase;
+  const static double tubeGridParallelogramSide;
+  const static double tubeGridParallelogramAngle;
 
-  static double tubeRotationAngle;
+  const static double tubeRotationAngle;
 
-  static double packBoxWidth;
-  static double packBoxHeight;
-  static double packBoxIdleLengthOnOneEnd;
-  static double tubeCentreDistanceFromPackFront; //1st lower (closest) tube 
+  const static double packBoxWidth;
+  const static double packBoxHeight;
+  const static double packBoxIdleLengthOnOneEnd;
+  const static double tubeCentreDistanceFromPackFront; //1st lower (closest) tube 
 
-  static double packHolderDistanceFromPackTop;
-  static double packHolderDistanceFromPackFront;
+  const static double packHolderDistanceFromPackTop;
+  const static double packHolderDistanceFromPackFront;
 
   /// B4C panel parts ///
-  static double B4CLengthOverStrawOnOneEnd;
-  static double B4CDistanceFromLastTubeCentre;
-  static double B4CPanelPartThickness[3];
-  static double B4CPanelPartHeight[3];
+  const static double B4CLengthOverStrawOnOneEnd;
+  const static double B4CDistanceFromLastTubeCentre;
+  const static double B4CPanelPartThickness[3];
+  const static double B4CPanelPartHeight[3];
 };
 
 #endif

@@ -28,17 +28,17 @@ public:
   static double getStrawPositionY(const int strawId);
 
 private:
-  static double strawOuterRadius;
-  static double strawWallThickness;
+  const static double strawOuterRadius;
+  const static double strawWallThickness;
 
-  static double frontTubeConverterThickness;
-  static double backTubeConverterThickness;
+  const static double frontTubeConverterThickness;
+  const static double backTubeConverterThickness;
 
-  static double tubeOuterRadius;
-  static double tubeWallThickness;
+  const static double tubeOuterRadius;
+  const static double tubeWallThickness;
 
-  static double strawPositionsInTube[7][2];
-  static double strawStrawDistance;
+  const static double strawPositionsInTube[7][2];
+  const static double strawStrawDistance;
 };
 
 #endif

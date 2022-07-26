@@ -12,10 +12,10 @@ public:
   bcsBanks(double rearBankDistance): rearBankDistance(rearBankDistance){}
 
   /// bcs tubes ///
-  static bcsTube* tubes;
+  const static bcsTube* tubes;
 
   /// bcs packs ///
-  static bcsPack* packs;
+  const static bcsPack* packs;
 
   /// banks ///
   static double getPackRotation();
@@ -36,37 +36,37 @@ public:
   static bool areTubesInverselyNumbered(const int bankId);
 
   /// boron masks ///
-  static boronMasks * masks;
+  const static boronMasks * masks;
   static double getBoronMaskPosition(const int bankId, const int maskId, const int axisIndex);
   static double getTriangularBoronMaskPosition(const int maskId, const int axisIndex);
 
     /// calibration masks ///
-  static calibMasks* calibMasks;
+  const static calibMasks* calibMasks;
   double getCalibMaskPosition(calibMasks::calibMasksBase calibMask,const int bankId, const int axisIndex) const;
 
 private:
   double rearBankDistance;
 
-  static double packHolderDistanceFromPackTop;
-  static double packHolderDistanceFromPackFront;
+  const static double packHolderDistanceFromPackTop;
+  const static double packHolderDistanceFromPackFront;
 
   /// bank //
-  static double strawLengthInBank[9];
-  static int numberOfPacksInBank[9];
+  const static double strawLengthInBank[9];
+  const static int numberOfPacksInBank[9];
 
-  static double bankRotation[9][3];
-  static double bankPositionAngle[9];
-  static double bankTiltAngle[9];
+  const static double bankRotation[9][3];
+  const static double bankPositionAngle[9];
+  const static double bankTiltAngle[9];
   static double calcBankRotation(const int bankId);
 
   const static int bankPosDir[9]; //indicate direction along respective (X or Y) axis
-  static double bankPosition[9][3];
-  static double bankPositionOffset[9][3]; 
-  static double bankSize[9][3];
-  static double topmostPackHolderPositionInBankFromTopFront[9][2];
+  const static double bankPosition[9][3];
+  const static double bankPositionOffset[9][3]; 
+  const static double bankSize[9][3];
+  const static double topmostPackHolderPositionInBankFromTopFront[9][2];
   static double packHolderToPackCentreCoordsInPack(const int axisIndex);
 
-  static double bankDistance[9];
+  const static double bankDistance[9];
   static double calcBankPositionZ(const int bankId);
   static double calcBankPositionXY(const int bankId);
 

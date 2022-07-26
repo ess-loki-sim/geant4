@@ -6,11 +6,11 @@
 #include <array>
 #include <cassert>
 
-double bcsBanks::packHolderDistanceFromPackTop = 7.6 *Units::mm;
-double bcsBanks::packHolderDistanceFromPackFront = 7.5 *Units::mm;
+const double bcsBanks::packHolderDistanceFromPackTop = 7.6 *Units::mm;
+const double bcsBanks::packHolderDistanceFromPackFront = 7.5 *Units::mm;
 
 /// bank ///
-double bcsBanks::strawLengthInBank[9] = { // all in mm
+const double bcsBanks::strawLengthInBank[9] = { // all in mm
     1000.0, // 0 - rear
     1000.0,  // 1 - mid top
     500.0, // 2 - mid left
@@ -22,7 +22,7 @@ double bcsBanks::strawLengthInBank[9] = { // all in mm
     1200.0, // 8 - front right
 };
 
-int bcsBanks::numberOfPacksInBank[9] = { // all in mm
+const int bcsBanks::numberOfPacksInBank[9] = { // all in mm
     28, // 0 - rear
     8,  // 1 - mid top
     6, // 2 - mid left
@@ -34,7 +34,7 @@ int bcsBanks::numberOfPacksInBank[9] = { // all in mm
     16, // 8 - front right
 };
 
-double bcsBanks::bankPositionAngle[9] = {
+const double bcsBanks::bankPositionAngle[9] = {
     0, // 0 - rear
     9.7,  // 1 - mid top
     6.5, // 2 - mid left
@@ -46,7 +46,7 @@ double bcsBanks::bankPositionAngle[9] = {
     25.6, // 8 - front right
 };
 
-double bcsBanks::bankTiltAngle[9] = {
+const double bcsBanks::bankTiltAngle[9] = {
     90.0, // 0 - rear
     94.0,  // 1 - mid top
     92.0, // 2 - mid left
@@ -63,7 +63,7 @@ double bcsBanks::calcBankRotation(const int bankId){ //27.5+ (80-90)
   return (90 - (bankTiltAngle[bankId] - bankPositionAngle[bankId])) *Units::degree;
 }
 
-double bcsBanks::bankRotation[9][3] = { // all in mm
+const double bcsBanks::bankRotation[9][3] = { // all in mm
     {0.0,      0.5*M_PI, calcBankRotation(0)}, // 0 - rear
     {M_PI,     0.5*M_PI, calcBankRotation(1)},  // 1 - mid top
     {1.5*M_PI, 0.5*M_PI, calcBankRotation(2)}, // 2 - mid left
@@ -75,7 +75,7 @@ double bcsBanks::bankRotation[9][3] = { // all in mm
     {0.5*M_PI, 0.5*M_PI, calcBankRotation(8)}, // 8 - front right
 };
 
-double bcsBanks::bankDistance[9] = {
+const double bcsBanks::bankDistance[9] = {
     0.0, // 0 - rear //TODO ssd
     2950.0,  // 1 - mid top
     3350.0, // 2 - mid left
@@ -103,7 +103,7 @@ double bcsBanks::calcBankPositionXY(const int bankId) {
 
 const int bcsBanks::bankPosDir[9] = { 1, 1, 1, -1, -1, 1, 1, -1, -1}; 
 
-double bcsBanks::bankPosition[9][3] = {
+const double bcsBanks::bankPosition[9][3] = {
     {0, 0, 0}, // 0 - rear !calculated in getBankPosition function!
     {0, calcBankPositionXY(1), calcBankPositionZ(1)},  // 1 - mid top
     {calcBankPositionXY(2), 0, calcBankPositionZ(2)}, // 2 - mid left
@@ -114,7 +114,7 @@ double bcsBanks::bankPosition[9][3] = {
     {0, calcBankPositionXY(7)*bankPosDir[3], calcBankPositionZ(7)}, // 7 - front bottom
     {calcBankPositionXY(8)*bankPosDir[3], 0, calcBankPositionZ(8)}, // 8 - front right
 };
-double bcsBanks::bankPositionOffset[9][3] = {
+const double bcsBanks::bankPositionOffset[9][3] = {
     {0.0, 0.0, 0.0}, // 0 - rear 
     {0.0, 0.0, 0.0},  // 1 - mid top
     {0.0, 0.0, 0.0}, // 2 - mid left
@@ -125,7 +125,7 @@ double bcsBanks::bankPositionOffset[9][3] = {
     {-100.50, 0.0, 0.0}, // 7 - front bottom
     {0.0, 51.43, 0.0}, // 8 - front right
 };
-double bcsBanks::bankSize[9][3] = { // x (width), y (height), z (depth)  //NOTE: x-y swap for vertical banks
+const double bcsBanks::bankSize[9][3] = { // x (width), y (height), z (depth)  //NOTE: x-y swap for vertical banks
     {1265.0, 1806.0, 285.00+15}, //0 - rear  {1265, 870+870+66, 285} //+20mm to avoid volume overlap of packs and the bank
     {1265.0, 590.18, 297.82},  // 1 - mid top {175+915+175, }
     {765.0, 447.45, 298.92}, // 2 - mid left
@@ -137,7 +137,7 @@ double bcsBanks::bankSize[9][3] = { // x (width), y (height), z (depth)  //NOTE:
     {1465.0, 1016.11, 302.99}, // 8 - front right // changed from 1016.08
 };
 
-double bcsBanks::topmostPackHolderPositionInBankFromTopFront[9][2] = { // y (height from bank top(*)), z (depth from bank front) (*)rotation?
+const double bcsBanks::topmostPackHolderPositionInBankFromTopFront[9][2] = { // y (height from bank top(*)), z (depth from bank front) (*)rotation?
     {117.26, 35.65}, //0 - rear  
     {77.12, 31.33},  // 1 - mid top (upside down)
     {77.38, 31.33}, // 2 - mid left (upside down)

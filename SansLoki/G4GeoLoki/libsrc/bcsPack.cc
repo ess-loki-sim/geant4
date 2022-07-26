@@ -3,16 +3,16 @@
 #include <cmath>
 #include <cassert>
 
-double bcsPack::tubeGridParallelogramBase = 27.00 *Units::mm;
-double bcsPack::tubeGridParallelogramSide = 28.40 *Units::mm;
-double bcsPack::tubeGridParallelogramAngle = 13.45 *Units::degree; // 90-76.55=13.45
+const double bcsPack::tubeGridParallelogramBase = 27.00 *Units::mm;
+const double bcsPack::tubeGridParallelogramSide = 28.40 *Units::mm;
+const double bcsPack::tubeGridParallelogramAngle = 13.45 *Units::degree; // 90-76.55=13.45
 
-double bcsPack::tubeRotationAngle = (8.45-30) *Units::degree; //8.45 degree should be the final roataion after the pack is rotated, pack rotation must be subtracted // -30 degree needed because of different default positioning;
+const double bcsPack::tubeRotationAngle = (8.45-30) *Units::degree; //8.45 degree should be the final roataion after the pack is rotated, pack rotation must be subtracted // -30 degree needed because of different default positioning;
 
-double bcsPack::packBoxWidth = 265.7 *Units::mm; //excluding the handle
-double bcsPack::packBoxHeight = 55.20 *Units::mm;
-double bcsPack::packBoxIdleLengthOnOneEnd = 111.50 *Units::mm;
-double bcsPack::tubeCentreDistanceFromPackFront = 36.50 *Units::mm;
+const double bcsPack::packBoxWidth = 265.7 *Units::mm; //excluding the handle
+const double bcsPack::packBoxHeight = 55.20 *Units::mm;
+const double bcsPack::packBoxIdleLengthOnOneEnd = 111.50 *Units::mm;
+const double bcsPack::tubeCentreDistanceFromPackFront = 36.50 *Units::mm;
 
 
 double bcsPack::getHorizontalTubeDistanceInPack() { 
@@ -75,15 +75,15 @@ double bcsPack::getVerticalTubeOffset(const int inPackTubeId) {
 
 /// B4C panel parts ///
 G4Material* bcsPack::B4CPanelMaterial = NamedMaterialProvider::getMaterial("ESS_B4C:b10_enrichment=0.95"); //TODO B4C S-DOUGH IS AN 18% EPOXY RESIN, 82% BORON CARBIDE MIX.IT IS MANUFACTURED BY STFC's ADVANCED MATERIALS GROUP.
-double bcsPack::B4CLengthOverStrawOnOneEnd = 12.0 *Units::mm;
-double bcsPack::B4CDistanceFromLastTubeCentre = 23.0 *Units::mm;
+const double bcsPack::B4CLengthOverStrawOnOneEnd = 12.0 *Units::mm;
+const double bcsPack::B4CDistanceFromLastTubeCentre = 23.0 *Units::mm;
 
-double bcsPack::B4CPanelPartThickness[3] = { // all in mm
+const double bcsPack::B4CPanelPartThickness[3] = { // all in mm
     5.0, // 0 - main part
     10.80,  // 1 - middle part
     3.00, // 2 - bottom part
 };
-double bcsPack::B4CPanelPartHeight[3] = { // all in mm
+const double bcsPack::B4CPanelPartHeight[3] = { // all in mm
     51.20, // 0 - main part
     5.00,  // 1 - middle part
     3.20, // 2 - bottom part

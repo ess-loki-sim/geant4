@@ -9,7 +9,7 @@ G4Material* boronMasks::maskMaterial = NamedMaterialProvider::getMaterial("ESS_B
 
 /// regular rectangular masks ///
 
-std::array<std::array<double, 7>, 6> boronMasks::rearBoronMasks = {{
+const std::array<std::array<double, 7>, 6> boronMasks::rearBoronMasks = {{
     // dx, dy, dz, x,y,z, rot  (x,y,z of its top,left,front corner (in front view))
     {132.0, 2 * 870.0, 5.0, 0.0, 0.0, 0.0, 0.0},                 // left
     {1031.0, 101.0, 5.0, 117.5, 0.0, 59.0, 0.0},                 // top face
@@ -19,7 +19,7 @@ std::array<std::array<double, 7>, 6> boronMasks::rearBoronMasks = {{
     {1216.0, 5.0, 125.0, 24.5, 1698.06, 64.47, 13.45}            // bottom
 }};
 
-std::array<std::array<double, 7>, 8> boronMasks::midVerticalBoronMasks = {{
+const std::array<std::array<double, 7>, 8> boronMasks::midVerticalBoronMasks = {{
     // dx, dy, dz, x,y,z,  (x,y,z of its top,left,front corner (in front view))
     {150.0, 377.0, 5.0, 0.0, 70.45, 0.0, 0.0},                            // left face
     {150.0, 377.0, 5.0, 150.0 + 465.0, 70.45, 0.0, 0.0},                  // right face
@@ -31,7 +31,7 @@ std::array<std::array<double, 7>, 8> boronMasks::midVerticalBoronMasks = {{
     {465.0, 5.0, 245.0 - 0.05, 14.5 + 135.5, 57.23, 59.53, 13.45},        // top middle part //57.24=70.03-cos(a)*55 59.53=6.04+sin(a)
 }};
 
-std::array<std::array<double, 7>, 8> boronMasks::midHorizontalBoronMasks = {{
+const std::array<std::array<double, 7>, 8> boronMasks::midHorizontalBoronMasks = {{
     // dx, dy, dz, x,y,z,  (x,y,z of its top,left,front corner (in front view))
     {175.0, 519.5, 5.0, 0.0, 70.68, 0.0, 0.0},                          // left face
     {175.0, 519.5, 5.0, 175.0 + 915.0, 70.68, 0.0, 0.0},                // right face
@@ -43,7 +43,7 @@ std::array<std::array<double, 7>, 8> boronMasks::midHorizontalBoronMasks = {{
     {915.0, 5.0, 245.0 - 0.05, 14.5 + 160.5, 57.23, 58.43, 13.45}       // top middle part //57.24=70.03-cos(a)*55 58.43=4.94+sin(a)
 }};
 
-std::array<std::array<double, 7>, 8> boronMasks::frontTopBoronMasks = {{
+const std::array<std::array<double, 7>, 8> boronMasks::frontTopBoronMasks = {{
     // dx, dy, dz, x,y,z,  (x,y,z of its top,left,front corner (in front view))
     {210.0, 884.0, 5.0, 0.0, 61.0, 0.0, 0.0}, // left face
     //{37.0, 864.0-162.0, 5.0,  173.0, 71.0, 0.0,  0.0}, //left face addition
@@ -57,7 +57,7 @@ std::array<std::array<double, 7>, 8> boronMasks::frontTopBoronMasks = {{
     {1119, 5.0, 250.0 - 0.05, 173, 58.40, 58.84 - 0.05, 13.45}            // top middle part //58.40=71.20-cos(a)*55 58.84=5.35+sin(a)
 }};
 
-std::array<std::array<double, 7>, 8> boronMasks::frontBottomBoronMasks = {{
+const std::array<std::array<double, 7>, 8> boronMasks::frontBottomBoronMasks = {{
     // dx, dy, dz, x,y,z,  (x,y,z of its top,left,front corner (in front view))
     {210.0, 620, 5.0, 0.0, 61.42, 0.0, 0.0}, // left face
     //{37.0, 600-125.5, 5.0,  173.0, 71.43, 0.0,  0.0}, //left face addition
@@ -71,7 +71,7 @@ std::array<std::array<double, 7>, 8> boronMasks::frontBottomBoronMasks = {{
     {173.0, 5.0, 305.0 - 0.05, 173.0 + 1119.0, 71.20, 5.25, 13.45} // top: right
 }};
 
-std::array<std::array<double, 7>, 8> boronMasks::frontVerticalBoronMasks = {{
+const std::array<std::array<double, 7>, 8> boronMasks::frontVerticalBoronMasks = {{
     // dx, dy, dz, x,y,z,  (x,y,z of its top,left,front corner (in front view))
     {173.0, 944.0, 5.0, 0.0, 1016.11 - 944.0, 0.0, 0.0},            // left
     {173.0, 944.0, 5.0, 173.0 + 1119.0, 1016.11 - 944.0, 0.0, 0.0}, // right face
@@ -146,7 +146,7 @@ double boronMasks::getRotation(const int bankId, const int maskId) {
 
 /// triangular masks ///
 
-std::array<std::array<double, 10>, 4> boronMasks::triangularBoronMasks = {{
+const std::array<std::array<double, 10>, 4> boronMasks::triangularBoronMasks = {{
     // dxHalf dyHalf dzHalf, xCutPoint, yCutPoint, xCutDir(up/down), yCutDir(up/down), bankId, xCentreDistanceFromBankCentre, yCentreDistanceFromBankCentre
     {200, 215, 2.5, 64, 65, 1, 1, 5, 892.5, -137.53 + 16.5},  // SI-7615-691
     {280, 240, 2.5, 69, 52, -1, 1, 5, -972.5, -22.53 + 16.5}, // SI-7615-692
