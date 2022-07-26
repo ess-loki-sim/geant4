@@ -8,8 +8,6 @@
 #include "G4Transform3D.hh"
 #include "G4Vector3D.hh"
 #include "G4SubtractionSolid.hh"
-//#include "G4LogicalVolume.hh"  ///might not be needed? 
-//#include <fstream>
 #include <cmath>
 #include <string> 
 #include <cassert>
@@ -32,7 +30,7 @@ private:
   G4LogicalVolume * createPackBoxLV(double strawLength, int packNumber, int numberOfPacksForInvertedNumbering, int numberOfPacks);
   G4LogicalVolume * createBankLV(int bankId);
   G4LogicalVolume * createTriangularMaskLV(int maskId);
-  G4LogicalVolume * createCalibrationSlitMaskLV();
+  G4LogicalVolume * createCalibrationMaskLV(calibMasks::calibMasksBase calibMask);
 
   int getTubeVolumeNumber(int packNumber, int inPackTubeId, int numberOfPacksForInvertedNumbering, int numberOfPacks);
 };
@@ -43,9 +41,6 @@ PYTHON_MODULE { GeoConstructPyExport::exportGeo<GeoBCS>("GeoBCSBanks"); }
 ////////////////////////////////////////////
 // Implementation of our geometry module: //
 ////////////////////////////////////////////
-
-
-//#include "G4Box.hh"
 
 GeoBCS::GeoBCS()
   : GeoConstructBase("G4GeoLoki/GeoBCSBanks"){
@@ -115,8 +110,8 @@ int GeoBCS::getTubeVolumeNumber(int packNumber, int inPackTubeId, int numberOfPa
 ///////////  CREATE PACK BOX LOGICAL VOLUME  //////////////////////////
 G4LogicalVolume *GeoBCS::createPackBoxLV(double strawLength, int packNumber, int numberOfPacksForInvertedNumbering, int numberOfPacks){
   auto lv_pack_box = new G4LogicalVolume(new G4Box("EmptyPackBox", 0.5*banks->packs->getPackBoxWidth(), 0.5*banks->packs->getPackBoxHeight(), 0.5 * strawLength + banks->packs->getPackBoxIdleLengthOnOneEnd()), banks->packs->packBoxFillMaterial, "EmptyPackBox");
-  /// Add 8 bcs detector tubes ///
-
+  
+  /// Add 8 BCS detector tubes ///
   auto lv_front_tube = createTubeLV(banks->tubes->getFrontTubeConverterThickness(), strawLength); 
   auto lv_back_tube = createTubeLV(banks->tubes->getBackTubeConverterThickness(), strawLength); 
   G4RotationMatrix* tubeRotationMatrix = new G4RotationMatrix(0, 0, banks->packs->getTubeRotation());
@@ -146,47 +141,32 @@ G4LogicalVolume *GeoBCS::createPackBoxLV(double strawLength, int packNumber, int
 }
 
 ///////////  CREATE CALIBRATION SLIT LOGICAL VOLUME  //////////////////////////
-// B4C sheet(cadmium in real life) with holes(slits) cut into it, used for calibration at the LoKI rear bank experiment at Larmor(ISIS), with hardcoded parameters
-G4LogicalVolume *GeoBCS::createCalibrationSlitMaskLV(){
-  const std::string maskName = "BoronMask-CalibrationSlits";
-  auto B4C_panel_material = getParameterMaterial("B4C_panel_material"); //TODO
+G4LogicalVolume *GeoBCS::createCalibrationMaskLV(calibMasks::calibMasksBase calibMask){
+  const std::string maskName = "BoronMask-"+calibMask.name;
+  const double maskThicknessHalf = 0.5*calibMask.thickness;
+  const double maskHeightHalf = 0.5*calibMask.height;
+  const double maskFullWidthHalf = 0.5*calibMask.getWidth();
 
-  const double slitWidth = 3*Units::mm; // 3 mm wide slits
-  const double slitWidthHalf =  0.5 * slitWidth; // 3 mm wide slits
-  const double maskThicknessHalf = 0.5 * 0.3*Units::mm; // The Gd is probably 300um thick coated on a 3mm Al. Al neglected
-  const double cutThicknessHalf = 1.5 * maskThicknessHalf; // A bit thicker, to be safe when substracting
-  const double maskWidthHalf = 0.5 * 976*Units::mm; // 63+100*4+103*4+74 + (3*9) = 976
-  const double maskHeightHalf = 0.5 * 800*Units::mm; // larger than reality
-  const double slitHeightHalf = 1.5 * maskHeightHalf; // A bit larger, to be safe when substracting
-
-  auto fullBox = new G4Box("EmptyFullBox", maskThicknessHalf, maskHeightHalf, maskWidthHalf);
-  auto slitCut = new G4Box("EmptySlitBox", cutThicknessHalf, slitHeightHalf, slitWidthHalf);
-
-  const double slitPositions[9]  = { //counting from the right side
-    maskWidthHalf - 74*Units::mm - slitWidthHalf,
-    maskWidthHalf - (74 + 1*103)*Units::mm - 1*slitWidth - slitWidthHalf,
-    maskWidthHalf - (74 + 2*103)*Units::mm - 2*slitWidth - slitWidthHalf,
-    maskWidthHalf - (74 + 3*103)*Units::mm - 3*slitWidth - slitWidthHalf,
-    maskWidthHalf - (74 + 4*103)*Units::mm - 4*slitWidth - slitWidthHalf,
-    maskWidthHalf - (74 + 4*103 + 1*100)*Units::mm - 5*slitWidth - slitWidthHalf,
-    maskWidthHalf - (74 + 4*103 + 2*100)*Units::mm - 6*slitWidth - slitWidthHalf,
-    maskWidthHalf - (74 + 4*103 + 3*100)*Units::mm - 7*slitWidth - slitWidthHalf,
-    maskWidthHalf - (74 + 4*103 + 4*100)*Units::mm - 8*slitWidth - slitWidthHalf,
-  };
-
-  auto slitBox = new G4SubtractionSolid("EmptyCalSlitBox", fullBox, slitCut, 0, G4ThreeVector(0,0,slitPositions[0]));
-  for(int i=1; i<=8; i++ ){
-    slitBox = new G4SubtractionSolid("EmptyCalSlitBox", slitBox, slitCut, 0, G4ThreeVector(0,0,slitPositions[i]));
+  auto lv_calibrationMask = new G4LogicalVolume(new G4Box("EmptyCalibMaskBox", maskThicknessHalf, maskHeightHalf, maskFullWidthHalf), 
+                                                 banks->calibMasks->maskBoxMaterial, "CalibMaskBox");
+  
+  double offset = 0.0;
+  int i = 0;
+  for(auto part = calibMask.pattern.begin(); part != calibMask.pattern.end(); part++,i++ ) {
+    const double partWidth = *part;
+    if(i % 2 == 0) { //The pattern is: maskPart ,slit, maskPart, slit...  
+      place(new G4Box(maskName, maskThicknessHalf, maskHeightHalf, 0.5*partWidth), 
+          banks->calibMasks->maskMaterial,
+          0., 0., -maskFullWidthHalf + offset + 0.5*partWidth,
+          lv_calibrationMask, DARKPURPLE, -5, 0, new G4RotationMatrix());
+    }
+    offset += partWidth;
   }
-
-  auto lv_calibrationSlits = new G4LogicalVolume(slitBox, B4C_panel_material, maskName);
-
-  return lv_calibrationSlits;
+  return lv_calibrationMask;
 }
 
 
 ///////////  CREATE DETECTOR BANK LOGICAL VOLUME  //////////////////////////
-
 G4LogicalVolume *GeoBCS::createBankLV(int bankId){
   const double strawLength = banks->getStrawLengthByBankId(bankId);
 
@@ -243,7 +223,7 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
   }
 
 /*
-  // Add Calibration slit system the Rear Bank volume for Larmor rear bank experiment calibration
+  // Add Calibration slit mask to the Rear Bank volume for Larmor rear bank experiment calibration
   const bool withCalibrationSlits = getParameterBoolean("with_calibration_slits");
   if (bankId == 0 && withCalibrationSlits) {
     const double detBankFrontDistance = banks->detectorSystemFrontDistanceFromBankFront(bankId);
@@ -251,8 +231,8 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
     const double verticalBankPosition = 0.5 * banks->getBankSize(bankId, 1) - 1155 *Units::mm + (4+33) *Units::mm; // beam centre at 1155 mm above floor, including the 4 mm electrical isolation layer, that is 33 mm above the Larmor floor (due to the weels)
     const double verticalPosition = - verticalBankPosition;
 
-    auto lv_calibrationSlits = createCalibrationSlitMaskLV();
-    place(lv_calibrationSlits,
+    auto lv_calibrationMask = createCalibrationMaskLV();
+    place(lv_calibrationMask,
           -bankSizeZHalf + detBankFrontDistance - 55*Units::mm, verticalPosition, 0, // 75mm in front of the first layer of tubes
           lv_bank, BLACK, -5, 0, new G4RotationMatrix());
   }*/
@@ -307,8 +287,10 @@ G4VPhysicalVolume* GeoBCS::Construct(){
   auto pvWorld = worldvols.physvol;
 
   // Create and place detector banks
-  const bool rearBankOnly = getParameterBoolean("rear_detector_only");
+  bool rearBankOnly = getParameterBoolean("rear_detector_only");
   const bool larmorRearBankExperiment = getParameterBoolean("larmor_rear_bank_experiment");
+  if(larmorRearBankExperiment) { rearBankOnly = true; }
+
   const int numberOfBanks = rearBankOnly ? 1 : 9;
   for (int bankId = 0; bankId < numberOfBanks; bankId++){
     auto lv_bank = createBankLV(bankId);
@@ -328,21 +310,18 @@ G4VPhysicalVolume* GeoBCS::Construct(){
 
     place(lv_bank, banks->getBankPosition(bankId, 0), verticalBankPosition, banks->getBankPosition(bankId, 2), lvWorld, ORANGE, bankId, 0, rotation);
 
-    // Add Calibration slit system for Larmor rear bank experiment calibration
+    // Add Calibration slit masks
     const bool withCalibrationSlits = getParameterBoolean("with_calibration_slits");
-    if (bankId == 0 && withCalibrationSlits) {
-      const double detBankFrontDistance = banks->detectorSystemFrontDistanceFromBankFront(bankId);
-      const double bankSizeZHalf = 0.5* banks->getBankSize(bankId, 2);
 
-      const double verticalPosition = 0;
-      const double maskWidthHalf = 0.5 * 976*Units::mm; // 63+100*4+103*4+74 + (3*9) = 976 REDUNDANT!!!
-      const double horisontalPosition = maskWidthHalf - 500*Units::mm + 76*Units::mm; //76 mm from the left edge of the B4C mask (that is -500 mm from the centre)
-
-
-      auto lv_calibrationSlits = createCalibrationSlitMaskLV();
-      place(lv_calibrationSlits,
-            horisontalPosition, verticalPosition, banks->getBankPosition(bankId, 2) -bankSizeZHalf + detBankFrontDistance - 75*Units::mm, // 75mm in front of the first layer of tubes
-            lvWorld, BLACK, -5, 0, rotation);
+    if (withCalibrationSlits && bankId!=6 && bankId!=8 ) {
+      std::string calibMaskName = "lokiStandard-"+std::to_string(bankId);
+      if (larmorRearBankExperiment) { calibMaskName = "larmorCdCalibMask"; }
+      const auto calibMask = banks->calibMasks->getCalibMask(calibMaskName);
+      auto lv_calibrationMask = createCalibrationMaskLV(calibMask);
+      
+      place(lv_calibrationMask,
+            banks->getCalibMaskPosition(calibMask, bankId, 0), banks->getCalibMaskPosition(calibMask, bankId, 1), banks->getCalibMaskPosition(calibMask, bankId, 2),
+            lvWorld, PURPLE, -5, 0, rotation);
       }
   }
 
@@ -359,7 +338,9 @@ G4VPhysicalVolume* GeoBCS::Construct(){
       auto rotation = new G4RotationMatrix();
       rotation->rotateX(banks->getBankRotation(bankId, 2) * rotateDir);
 
-      place(lv_triangularMask, banks->getTriangularBoronMaskPosition(maskId, 0), banks->getTriangularBoronMaskPosition(maskId, 1), banks->getTriangularBoronMaskPosition(maskId, 2), lvWorld, BLACK, -5, 0, rotation);
+      place(lv_triangularMask, 
+            banks->getTriangularBoronMaskPosition(maskId, 0), banks->getTriangularBoronMaskPosition(maskId, 1), banks->getTriangularBoronMaskPosition(maskId, 2), 
+            lvWorld, BLACK, -5, 0, rotation);
     }
   }
 

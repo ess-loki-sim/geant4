@@ -5,6 +5,7 @@
 #include "G4GeoLoki/bcsTube.hh"
 #include "G4GeoLoki/bcsPack.hh"
 #include "G4GeoLoki/boronMasks.hh"
+#include "G4GeoLoki/calibMasks.hh"
 
 class bcsBanks {
 public:
@@ -39,6 +40,10 @@ public:
   static double getBoronMaskPosition(const int bankId, const int maskId, const int axisIndex);
   static double getTriangularBoronMaskPosition(const int maskId, const int axisIndex);
 
+    /// calibration masks ///
+  static calibMasks* calibMasks;
+  double getCalibMaskPosition(calibMasks::calibMasksBase calibMask,const int bankId, const int axisIndex) const;
+
 private:
   double rearBankDistance;
 
@@ -54,6 +59,7 @@ private:
   static double bankTiltAngle[9];
   static double calcBankRotation(const int bankId);
 
+  const static int bankPosDir[9]; //indicate direction along respective (X or Y) axis
   static double bankPosition[9][3];
   static double bankPositionOffset[9][3]; 
   static double bankSize[9][3];

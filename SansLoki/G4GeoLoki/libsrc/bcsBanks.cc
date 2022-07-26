@@ -101,16 +101,18 @@ double bcsBanks::calcBankPositionXY(const int bankId) {
   return intendedPosition + bankCentreOffsetXY;
 }
 
+const int bcsBanks::bankPosDir[9] = { 1, 1, 1, -1, -1, 1, 1, -1, -1}; 
+
 double bcsBanks::bankPosition[9][3] = {
     {0, 0, 0}, // 0 - rear !calculated in getBankPosition function!
     {0, calcBankPositionXY(1), calcBankPositionZ(1)},  // 1 - mid top
     {calcBankPositionXY(2), 0, calcBankPositionZ(2)}, // 2 - mid left
-    {0, -calcBankPositionXY(3), calcBankPositionZ(3)},  // 3 - mid bottom
-    {-calcBankPositionXY(4), 0, calcBankPositionZ(4)}, // 4 - mid right
+    {0, calcBankPositionXY(3)*bankPosDir[3], calcBankPositionZ(3)},  // 3 - mid bottom
+    {calcBankPositionXY(4)*bankPosDir[3], 0, calcBankPositionZ(4)}, // 4 - mid right
     {0, calcBankPositionXY(5), calcBankPositionZ(5)}, // 5 - front top
     {calcBankPositionXY(6), 0, calcBankPositionZ(6)}, // 6 - front left
-    {0, -calcBankPositionXY(7), calcBankPositionZ(7)}, // 7 - front bottom
-    {-calcBankPositionXY(8), 0, calcBankPositionZ(8)}, // 8 - front right
+    {0, calcBankPositionXY(7)*bankPosDir[3], calcBankPositionZ(7)}, // 7 - front bottom
+    {calcBankPositionXY(8)*bankPosDir[3], 0, calcBankPositionZ(8)}, // 8 - front right
 };
 double bcsBanks::bankPositionOffset[9][3] = {
     {0.0, 0.0, 0.0}, // 0 - rear 
@@ -271,6 +273,15 @@ double bcsBanks::detectorSystemCentreOffsetInBank(const int bankId, const int ax
   }
 }
 
+bool bcsBanks::isVertical(const int bankId) {
+  assert(0 <= bankId && bankId <= 8);
+  return (bankId == 2 || bankId == 4 || bankId == 6 || bankId == 8);
+}
+bool bcsBanks::areTubesInverselyNumbered(const int bankId) {
+  assert(0 <= bankId && bankId <= 8);
+  return (bankId == 1 || bankId == 2 || bankId == 5 || bankId == 6);
+}
+
 /// Borom Masks ///
 
 double bcsBanks::getBoronMaskPosition(const int bankId, const int maskId, const int axisIndex) {
@@ -309,18 +320,34 @@ double bcsBanks::getTriangularBoronMaskPosition(const int maskId, const int axis
     return bankPositionOffset[bankId][axisIndex] + masks->getPosInBankOfTriangularMask(maskId, 0);
   }
   else if(axisIndex == 1){  //y direction
-    return (distance * std::sin(bankPosAngle) - (halfThickness + detFrontBankFrontDistance) * std::sin(rotation) + verticalPosInBank * std::cos(rotation))* masks->getCutDirOfTriangularMask(maskId, 1);
+    return (distance * std::sin(bankPosAngle) - (halfThickness + detFrontBankFrontDistance) * std::sin(rotation) + verticalPosInBank * std::cos(rotation))*bankPosDir[bankId];
   }
   else{ //z direction
     return distance * std::cos(bankPosAngle) - (halfThickness + detFrontBankFrontDistance) * std::cos(rotation) - verticalPosInBank * std::sin(rotation);
   }
 }
 
-bool bcsBanks::isVertical(const int bankId) {
-  assert(0 <= bankId && bankId <= 8);
-  return (bankId == 2 || bankId == 4 || bankId == 6 || bankId == 8);
-}
-bool bcsBanks::areTubesInverselyNumbered(const int bankId) {
-  assert(0 <= bankId && bankId <= 8);
-  return (bankId == 1 || bankId == 2 || bankId == 5 || bankId == 6);
-}
+ double bcsBanks::getCalibMaskPosition(calibMasks::calibMasksBase calibMask, const int bankId, const int axisIndex) const {
+  assert(0 <= axisIndex && axisIndex <= 2);
+  //TODO: instead of vertical/horisontal use along tube / perpendicular
+  //TODO: mention that elevation is up or to the left
+
+  const double offsetPerpendicularToBCSTubes = 0.; //possible extension, needs implementation in calibMasks::calibMasksBase class
+  const double offsetAlongBCSTubes = 0.5*getStrawLengthByBankId(bankId) - calibMask.leftTubeEndDistance - 0.5*calibMask.getWidth();
+  const double elevationFromBankCentre = 0.5*getBankSize(bankId,2) + 0.5*calibMask.thickness + calibMask.elevationFromMaskFront;
+  const double bankRot = bankRotation[bankId][2];
+
+  if((axisIndex == 0 && !isVertical(bankId)) || (axisIndex == 1 && isVertical(bankId))) {
+    return bankPositionOffset[bankId][axisIndex] + offsetAlongBCSTubes;
+  }
+  else if((axisIndex == 0 && isVertical(bankId)) || (axisIndex == 1 && !isVertical(bankId))) {
+    return getBankPosition(bankId,axisIndex) 
+           - (elevationFromBankCentre * std::sin(bankRot) *bankPosDir[bankId]) 
+           + (offsetPerpendicularToBCSTubes * std::cos(bankRot));
+  }
+  else{ //z direction
+    return getBankPosition(bankId, 2) 
+           - elevationFromBankCentre * std::cos(bankRot) 
+           - offsetPerpendicularToBCSTubes * std::sin(bankRot) *bankPosDir[bankId];
+  }
+ }

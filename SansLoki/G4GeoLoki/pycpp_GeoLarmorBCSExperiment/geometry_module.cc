@@ -8,8 +8,6 @@
 #include "G4Transform3D.hh"
 #include "G4Vector3D.hh"
 #include "G4SubtractionSolid.hh"
-//#include "G4LogicalVolume.hh"  ///might not be needed? 
-//#include <fstream>
 #include <cmath>
 #include <string> 
 
@@ -40,9 +38,6 @@ PYTHON_MODULE { GeoConstructPyExport::exportGeo<GeoBCS>("GeoLarmorBCSExperiment"
 ////////////////////////////////////////////
 // Implementation of our geometry module: //
 ////////////////////////////////////////////
-
-
-//#include "G4Box.hh"
 
 GeoBCS::GeoBCS()
   : GeoConstructBase("G4GeoLoki/GeoLarmorBCSExperiment"){
@@ -127,7 +122,6 @@ G4LogicalVolume *GeoBCS::createPackBoxLV(double strawLength, int packNumber, int
 }
 
 ///////////  CREATE DETECTOR BANK LOGICAL VOLUME  //////////////////////////
-
 G4LogicalVolume *GeoBCS::createBankLV(int bankId){
   const double pack_pack_distance = banks->getPackPackDistance();
   const int numberOfPacks = 4; //banks->getNumberOfPacksByBankId(bankId); 
