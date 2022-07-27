@@ -11,26 +11,30 @@ class CalibMasks {
 public:
   class CalibMasksBase {
     public:
-      const std::string name;
-      const double thickness;
-      const double height;
-      const double leftTubeEndDistance;
-      const double elevationFromMaskFront = 0.0; 
-      const std::vector<double> pattern;
+      CalibMasksBase(std::string name, double thickness, double height, double leftTubeEndDistance, std::vector<double> pattern);
+      CalibMasksBase(std::string name, double thickness, double height, double leftTubeEndDistance, double elevationFromMaskFront, std::vector<double> pattern);
 
-      CalibMasksBase(std::string name, double thickness, double height, double leftTubeEndDistance, std::vector<double> pattern): name(name), thickness(thickness), height(height), leftTubeEndDistance(leftTubeEndDistance), pattern(pattern){
-      }
-      CalibMasksBase(std::string name, double thickness, double height, double leftTubeEndDistance, double elevationFromMaskFront, std::vector<double> pattern): name(name), thickness(thickness), height(height), leftTubeEndDistance(leftTubeEndDistance), elevationFromMaskFront(elevationFromMaskFront), pattern(pattern){}
-
+      std::string getName() const;
+      double getThickness() const;
+      double getHeight() const;
+      double getLeftTubeEndDistance() const;
+      double getElevationFromMaskFront() const;
+      std::vector<double> getPattern() const;
       double getWidth() const;
-      double getNumberOfMaskParts() const;
+    private:
+      const std::string m_name;
+      const double m_thickness;
+      const double m_height;
+      const double m_leftTubeEndDistance;
+      const double m_elevationFromMaskFront = 0.0; 
+      const std::vector<double> m_pattern;
   };
   static CalibMasksBase getCalibMask(std::string name);
   static G4Material* maskMaterial;
   static G4Material* maskBoxMaterial;
 
 private:
-  const static std::map<std::string, CalibMasks::CalibMasksBase> masks;
+  const static std::map<std::string, CalibMasks::CalibMasksBase> m_masks;
 };
 
 #endif

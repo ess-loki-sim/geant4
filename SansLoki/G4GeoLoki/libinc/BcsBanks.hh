@@ -9,8 +9,7 @@
 
 class BcsBanks {
 public:
-  BcsBanks(double rearBankDistance): rearBankDistance(rearBankDistance){}
-
+  BcsBanks(double rearBankDistance): m_rearBankDistance(rearBankDistance){}
   /// bcs tubes ///
   const static BcsTube* tubes;
 
@@ -45,7 +44,7 @@ public:
   double getCalibMaskPosition(CalibMasks::CalibMasksBase calibMask,const int bankId, const int axisIndex) const;
 
 private:
-  double rearBankDistance;
+  double m_rearBankDistance;
 
   const static double packHolderDistanceFromPackTop;
   const static double packHolderDistanceFromPackFront;

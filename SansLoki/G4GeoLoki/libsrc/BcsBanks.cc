@@ -184,7 +184,7 @@ double BcsBanks::getBankPosition(const int bankId, const int axisIndex) const {
   assert(0 <= bankId && bankId <= 8);
   assert(0 <= axisIndex && axisIndex <= 2); 
   if(bankId == 0){
-    double rearBankPosition[] = {0, -detectorSystemCentreOffsetInBank(bankId, 1), rearBankDistance + detectorSystemCentreOffsetInBank(bankId, 2)};
+    double rearBankPosition[] = {0, -detectorSystemCentreOffsetInBank(bankId, 1), this->m_rearBankDistance + detectorSystemCentreOffsetInBank(bankId, 2)};
     return rearBankPosition[axisIndex];
   }
   else{
@@ -344,8 +344,8 @@ double BcsBanks::getTriangularBoronMaskPosition(const int maskId, const int axis
   //TODO: mention that elevation is up or to the left
 
   const double offsetPerpendicularToBCSTubes = 0.; //possible extension, needs implementation in calibMasks::calibMasksBase class
-  const double offsetAlongBCSTubes = 0.5*getStrawLengthByBankId(bankId) - calibMask.leftTubeEndDistance - 0.5*calibMask.getWidth();
-  const double elevationFromBankCentre = 0.5*getBankSize(bankId,2) + 0.5*calibMask.thickness + calibMask.elevationFromMaskFront;
+  const double offsetAlongBCSTubes = 0.5*getStrawLengthByBankId(bankId) - calibMask.getLeftTubeEndDistance() - 0.5*calibMask.getWidth();
+  const double elevationFromBankCentre = 0.5*getBankSize(bankId,2) + 0.5*calibMask.getThickness() + calibMask.getElevationFromMaskFront();
   const double bankRot = bankRotation[bankId][2];
 
   if((axisIndex == 0 && !isVertical(bankId)) || (axisIndex == 1 && isVertical(bankId))) {

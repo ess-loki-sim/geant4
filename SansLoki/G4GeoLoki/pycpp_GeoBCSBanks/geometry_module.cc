@@ -142,9 +142,9 @@ G4LogicalVolume *GeoBCS::createPackBoxLV(double strawLength, int packNumber, int
 
 ///////////  CREATE CALIBRATION SLIT LOGICAL VOLUME  //////////////////////////
 G4LogicalVolume *GeoBCS::createCalibrationMaskLV(CalibMasks::CalibMasksBase calibMask){
-  const std::string maskName = "BoronMask-"+calibMask.name;
-  const double maskThicknessHalf = 0.5*calibMask.thickness;
-  const double maskHeightHalf = 0.5*calibMask.height;
+  const std::string maskName = "BoronMask-"+calibMask.getName();
+  const double maskThicknessHalf = 0.5*calibMask.getThickness();
+  const double maskHeightHalf = 0.5*calibMask.getHeight();
   const double maskFullWidthHalf = 0.5*calibMask.getWidth();
 
   auto lv_calibrationMask = new G4LogicalVolume(new G4Box("EmptyCalibMaskBox", maskThicknessHalf, maskHeightHalf, maskFullWidthHalf), 
@@ -152,7 +152,8 @@ G4LogicalVolume *GeoBCS::createCalibrationMaskLV(CalibMasks::CalibMasksBase cali
   
   double offset = 0.0;
   int i = 0;
-  for(auto part = calibMask.pattern.begin(); part != calibMask.pattern.end(); part++,i++ ) {
+  const auto pattern = calibMask.getPattern();
+  for(auto part = pattern.begin(); part != pattern.end(); part++,i++ ) {
     const double partWidth = *part;
     if(i % 2 == 0) { //The pattern is: maskPart ,slit, maskPart, slit...  
       place(new G4Box(maskName, maskThicknessHalf, maskHeightHalf, 0.5*partWidth), 

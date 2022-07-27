@@ -32,25 +32,62 @@ const CalibMasks::CalibMasksBase mask8("lokiStandard-8", 0.3, 820.0, -47.0,
 CalibMasks::CalibMasksBase maskLarmor("larmorCdCalibMask", 0.3, 800., -50., (75.-59.0188),
   {63., 3.,100.,3.,100.,3.,100.,3.,100.,3., 103.,3.,103.,3.,103.,3.,103.,3., 74.});
 
-const std::map<std::string, CalibMasks::CalibMasksBase> CalibMasks::masks { 
-  {maskLarmor.name, maskLarmor}, 
-  {mask0.name, mask0},
-  {mask1.name, mask1},
-  {mask2.name, mask2},
-  {mask3.name, mask3},
-  {mask4.name, mask4},
-  {mask5.name, mask5},
-  {mask6.name, mask5},
-  {mask7.name, mask7},
-  {mask8.name, mask8},
+const std::map<std::string, CalibMasks::CalibMasksBase> CalibMasks::m_masks { 
+  {maskLarmor.getName(), maskLarmor}, 
+  {mask0.getName(), mask0},
+  {mask1.getName(), mask1},
+  {mask2.getName(), mask2},
+  {mask3.getName(), mask3},
+  {mask4.getName(), mask4},
+  {mask5.getName(), mask5},
+  {mask6.getName(), mask5},
+  {mask7.getName(), mask7},
+  {mask8.getName(), mask8},
 };
 
 
+CalibMasks::CalibMasksBase::CalibMasksBase(std::string name, double thickness, double height, double leftTubeEndDistance, std::vector<double> pattern)
+  : m_name(name), 
+    m_thickness(thickness), 
+    m_height(height), 
+    m_leftTubeEndDistance(leftTubeEndDistance), 
+    m_pattern(pattern)
+{
+}
+CalibMasks::CalibMasksBase::CalibMasksBase(std::string name, double thickness, double height, double leftTubeEndDistance, double elevationFromMaskFront, std::vector<double> pattern)
+  : m_name(name), 
+    m_thickness(thickness), 
+    m_height(height), 
+    m_leftTubeEndDistance(leftTubeEndDistance), 
+    m_elevationFromMaskFront(elevationFromMaskFront),
+    m_pattern(pattern)
+{
+}
+
 CalibMasks::CalibMasksBase CalibMasks::getCalibMask(std::string name){
-  return masks.find(name)->second;
+  return m_masks.find(name)->second;
+}
+
+std::string CalibMasks::CalibMasksBase::getName() const{
+  return this->m_name;
+}
+double CalibMasks::CalibMasksBase::getThickness() const{
+  return this->m_thickness;
+}
+double CalibMasks::CalibMasksBase::getHeight() const{
+  return this->m_height;
+}
+double CalibMasks::CalibMasksBase::getLeftTubeEndDistance() const{
+  return this->m_leftTubeEndDistance;
+}
+double CalibMasks::CalibMasksBase::getElevationFromMaskFront() const{
+  return this->m_elevationFromMaskFront;
+}
+std::vector<double> CalibMasks::CalibMasksBase::getPattern() const{
+  return this->m_pattern;
 }
 double CalibMasks::CalibMasksBase::getWidth() const{
-  return std::accumulate(this->pattern.begin(), this->pattern.end(), decltype(this->pattern)::value_type(0));
+  return std::accumulate(this->m_pattern.begin(), this->m_pattern.end(), decltype(this->m_pattern)::value_type(0));
 }
 
 G4Material* CalibMasks::maskMaterial = NamedMaterialProvider::getMaterial("ESS_B4C:b10_enrichment=0.95");
