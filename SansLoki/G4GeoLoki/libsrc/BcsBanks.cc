@@ -152,11 +152,11 @@ const double BcsBanks::topmostPackHolderPositionInBankFromTopFront[9][2] = { // 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
  double BcsBanks::getPackRotation() {
-   return packs->getTubeGridParallelogramAngle(); 
+   return BcsPack::getTubeGridParallelogramAngle(); 
  }
 
 double BcsBanks::getPackPackDistance() { 
-  return packs->getTubeGridParallelogramSide() * 2; 
+  return BcsPack::getTubeGridParallelogramSide() * 2; 
 }
 
 
@@ -200,10 +200,10 @@ double BcsBanks::getBankSize(const int bankId, const int axisIndex) {
 double BcsBanks::packHolderToPackCentreCoordsInPack(const int axisIndex) {
   assert(1 <= axisIndex && axisIndex <= 2);
   if(axisIndex == 1) { //y
-    return 0.5*packs->getPackBoxHeight() - packHolderDistanceFromPackTop;
+    return 0.5*BcsPack::getPackBoxHeight() - packHolderDistanceFromPackTop;
   }
   else {//z
-    return 0.5*packs->getPackBoxWidth() - packHolderDistanceFromPackFront;
+    return 0.5*BcsPack::getPackBoxWidth() - packHolderDistanceFromPackFront;
   }
 }
 
@@ -244,10 +244,10 @@ double BcsBanks::getPackPositionInBank(const int bankId, const int packNumber, c
 double BcsBanks::packHolderToFirstTubeCentreCoordsInPack(const int axisIndex) {
   assert(1 <= axisIndex && axisIndex <= 2);
   if(axisIndex == 1) { //y
-    return 0.5*packs->getPackBoxHeight() + 0.5*packs->getVerticalTubeDistanceInPack() - packHolderDistanceFromPackTop;
+    return 0.5*BcsPack::getPackBoxHeight() + 0.5*BcsPack::getVerticalTubeDistanceInPack() - packHolderDistanceFromPackTop;
   }
   else {//z
-    return packs->getTubeCentreDistanceFromPackFront() - packHolderDistanceFromPackFront;
+    return BcsPack::getTubeCentreDistanceFromPackFront() - packHolderDistanceFromPackFront;
   }
 }
 
@@ -256,7 +256,7 @@ double BcsBanks::detectorSystemFrontDistanceFromBankFront(const int bankId) {
   const double packHolderPositionZFromBankFront = topmostPackHolderPositionInBankFromTopFront[bankId][1];
   const double positionOfFirstTubeCentreFromPackHolderZ = packHolderToFirstTubeCentreCoordsInPack(2) *std::cos(getPackRotation()) + packHolderToFirstTubeCentreCoordsInPack(1) *std::sin(getPackRotation());
 
-  return packHolderPositionZFromBankFront + positionOfFirstTubeCentreFromPackHolderZ - tubes->getTubeOuterRadius();
+  return packHolderPositionZFromBankFront + positionOfFirstTubeCentreFromPackHolderZ - BcsTube::getTubeOuterRadius();
 }
 
 double BcsBanks::detectorSystemCentreDistanceFromBankTop(const int bankId) {
@@ -264,8 +264,8 @@ double BcsBanks::detectorSystemCentreDistanceFromBankTop(const int bankId) {
   const double packHolderDistanceYFromBankTop = topmostPackHolderPositionInBankFromTopFront[bankId][0];
 
   const double distanceOfSecondRowTubeCentreFromPackHolderY = std::abs(packHolderToFirstTubeCentreCoordsInPack(2) * std::sin(getPackRotation()) - packHolderToFirstTubeCentreCoordsInPack(1) * std::cos(getPackRotation()));
-  const double distanceOfFirstRowTubeCentreFromPackHolderY = distanceOfSecondRowTubeCentreFromPackHolderY - packs->getTubeGridParallelogramSide();
-  const double detectorSystemSizeY = (numberOfPacksInBank[bankId] * 2 - 1) * packs->getTubeGridParallelogramSide(); // from top row centre to lowest row centre
+  const double distanceOfFirstRowTubeCentreFromPackHolderY = distanceOfSecondRowTubeCentreFromPackHolderY - BcsPack::getTubeGridParallelogramSide();
+  const double detectorSystemSizeY = (numberOfPacksInBank[bankId] * 2 - 1) * BcsPack::getTubeGridParallelogramSide(); // from top row centre to lowest row centre
   
   const double distanceOfDetectorSystemCentreFromPackHolderY = distanceOfFirstRowTubeCentreFromPackHolderY + 0.5 * detectorSystemSizeY;
 
@@ -297,38 +297,38 @@ bool BcsBanks::areTubesInverselyNumbered(const int bankId) {
 
 double BcsBanks::getBoronMaskPosition(const int bankId, const int maskId, const int axisIndex) {
   assert(0 <= axisIndex && axisIndex <= 2);
-  const double thickness =  masks->getSize(bankId, maskId, axisIndex);
-  const double position =  masks->getPosition(bankId, maskId, axisIndex);
+  const double thickness =  BoronMasks::getSize(bankId, maskId, axisIndex);
+  const double position =  BoronMasks::getPosition(bankId, maskId, axisIndex);
   const double bankSizeHalf = 0.5*getBankSize(bankId, axisIndex);
-  const double rotation =  masks->getRotation(bankId, maskId);
+  const double rotation =  BoronMasks::getRotation(bankId, maskId);
 
   if(axisIndex == 0){//x direction
     return bankSizeHalf - (position + 0.5*thickness);
   }
   else if(axisIndex == 1){  //y direction
-    const double rotationCorrection = (1 - std::cos(rotation)) * 0.5*masks->getSize(bankId, maskId, 1) - std::sin(rotation) * 0.5* (-masks->getSize(bankId, maskId, 2));
+    const double rotationCorrection = (1 - std::cos(rotation)) * 0.5*BoronMasks::getSize(bankId, maskId, 1) - std::sin(rotation) * 0.5* (-BoronMasks::getSize(bankId, maskId, 2));
     return bankSizeHalf - (position + 0.5*thickness) + rotationCorrection; 
   }
   else{ //z direction
-    const double rotationCorrection = (1 - std::cos(rotation)) * 0.5*(-masks->getSize(bankId, maskId, 2)) + std::sin(rotation) * 0.5*masks->getSize(bankId, maskId, 1);
+    const double rotationCorrection = (1 - std::cos(rotation)) * 0.5*(-BoronMasks::getSize(bankId, maskId, 2)) + std::sin(rotation) * 0.5*BoronMasks::getSize(bankId, maskId, 1);
     return - bankSizeHalf + position + 0.5*thickness + rotationCorrection; 
   }
 }
 
 double BcsBanks::getTriangularBoronMaskPosition(const int maskId, const int axisIndex) {
   assert(0 <= axisIndex && axisIndex <= 2);
-  const int bankId = masks->getBankIdOfTriangularMask(maskId);
+  const int bankId = BoronMasks::getBankIdOfTriangularMask(maskId);
   const double distance = bankDistance[bankId];
 
-  const double halfThickness = masks->getHalfSizeOfTriangularMask(maskId, 2);
-  const double verticalPosInBank = masks->getPosInBankOfTriangularMask(maskId, 1);
+  const double halfThickness = BoronMasks::getHalfSizeOfTriangularMask(maskId, 2);
+  const double verticalPosInBank = BoronMasks::getPosInBankOfTriangularMask(maskId, 1);
 
   const double rotation = bankRotation[bankId][2];
   const double bankPosAngle = bankPositionAngle[bankId] *Units::degree;
   const double detFrontBankFrontDistance = detectorSystemFrontDistanceFromBankFront(bankId);
 
   if(axisIndex == 0){//x direction
-    return bankPositionOffset[bankId][axisIndex] + masks->getPosInBankOfTriangularMask(maskId, 0);
+    return bankPositionOffset[bankId][axisIndex] + BoronMasks::getPosInBankOfTriangularMask(maskId, 0);
   }
   else if(axisIndex == 1){  //y direction
     return (distance * std::sin(bankPosAngle) - (halfThickness + detFrontBankFrontDistance) * std::sin(rotation) + verticalPosInBank * std::cos(rotation))*bankPosDir[bankId];

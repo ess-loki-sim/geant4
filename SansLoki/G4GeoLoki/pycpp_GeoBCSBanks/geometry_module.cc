@@ -20,11 +20,11 @@ public:
   GeoBCS();
   virtual ~GeoBCS(){}
   virtual G4VPhysicalVolume* Construct();
-  
-  BcsBanks * banks;
+
 protected:
   virtual bool validateParameters();
 private:
+  BcsBanks* banks;
   //Functions
   G4LogicalVolume * createTubeLV(double converter_thickness, double straw_length);
   G4LogicalVolume * createPackBoxLV(double strawLength, int packNumber, int numberOfPacksForInvertedNumbering, int numberOfPacks);
@@ -61,23 +61,23 @@ GeoBCS::GeoBCS()
 }
 
 G4LogicalVolume * GeoBCS::createTubeLV(double converterThickness, double strawLength){
-  const double effectiveStrawLength = strawLength - banks->tubes->getStrawWallThickness(); //This is only epsilon difference...
+  const double effectiveStrawLength = strawLength - BcsTube::getStrawWallThickness(); //This is only epsilon difference...
 
-  auto lv_tube = new G4LogicalVolume(new G4Tubs("TubeWall",0,  banks->tubes->getTubeOuterRadius(), 0.5*strawLength, 0., 2*M_PI),
-                                     banks->tubes->tubeWallMaterial, "TubeWall");
+  auto lv_tube = new G4LogicalVolume(new G4Tubs("TubeWall",0,  BcsTube::getTubeOuterRadius(), 0.5*strawLength, 0., 2*M_PI),
+                                     BcsTube::tubeWallMaterial, "TubeWall");
 
-  auto lv_empty_tube = place(new G4Tubs("EmptyTube", 0., banks->tubes->getTubeInnerRadius(), 0.5*strawLength, 0., 2*M_PI),
-                             banks->tubes->tubeInnerGas, 0,0,0, lv_tube, G4Colour(0,1,1),-2,0,0).logvol;
+  auto lv_empty_tube = place(new G4Tubs("EmptyTube", 0., BcsTube::getTubeInnerRadius(), 0.5*strawLength, 0., 2*M_PI),
+                             BcsTube::tubeInnerGas, 0,0,0, lv_tube, G4Colour(0,1,1),-2,0,0).logvol;
   
   for (int cpNo = 0; cpNo <= 6; cpNo++){
-    auto lv_straw_wall = place(new G4Tubs("StrawWall", 0, banks->tubes->getStrawOuterRadius(), 0.5*strawLength, 0., 2 * M_PI),
-                               banks->tubes->strawWallMaterial, banks->tubes->getStrawPositionX(cpNo), banks->tubes->getStrawPositionY(cpNo), 0, lv_empty_tube, ORANGE, cpNo, 0, 0).logvol;
+    auto lv_straw_wall = place(new G4Tubs("StrawWall", 0, BcsTube::getStrawOuterRadius(), 0.5*strawLength, 0., 2 * M_PI),
+                               BcsTube::strawWallMaterial, BcsTube::getStrawPositionX(cpNo), BcsTube::getStrawPositionY(cpNo), 0, lv_empty_tube, ORANGE, cpNo, 0, 0).logvol;
 
-    auto lv_converter = place(new G4Tubs("Converter", 0., banks->tubes->getStrawInnerRadius(), 0.5*effectiveStrawLength, 0., 2 * M_PI),
-                              banks->tubes->converterMaterial, 0, 0, 0, lv_straw_wall, G4Colour(0, 1, 1), cpNo + 100, 0, 0).logvol;
+    auto lv_converter = place(new G4Tubs("Converter", 0., BcsTube::getStrawInnerRadius(), 0.5*effectiveStrawLength, 0., 2 * M_PI),
+                              BcsTube::converterMaterial, 0, 0, 0, lv_straw_wall, G4Colour(0, 1, 1), cpNo + 100, 0, 0).logvol;
 
-    place(new G4Tubs("CountingGas", 0., banks->tubes->getStrawInnerRadius() - converterThickness, 0.5*effectiveStrawLength, 0., 2 * M_PI),
-          banks->tubes->countingGas, 0, 0, 0, lv_converter, G4Colour(0, 0, 1), 0, 0, 0);
+    place(new G4Tubs("CountingGas", 0., BcsTube::getStrawInnerRadius() - converterThickness, 0.5*effectiveStrawLength, 0., 2 * M_PI),
+          BcsTube::countingGas, 0, 0, 0, lv_converter, G4Colour(0, 0, 1), 0, 0, 0);
   }
   return lv_tube;
 }
@@ -109,32 +109,32 @@ int GeoBCS::getTubeVolumeNumber(int packNumber, int inPackTubeId, int numberOfPa
 
 ///////////  CREATE PACK BOX LOGICAL VOLUME  //////////////////////////
 G4LogicalVolume *GeoBCS::createPackBoxLV(double strawLength, int packNumber, int numberOfPacksForInvertedNumbering, int numberOfPacks){
-  auto lv_pack_box = new G4LogicalVolume(new G4Box("EmptyPackBox", 0.5*banks->packs->getPackBoxWidth(), 0.5*banks->packs->getPackBoxHeight(), 0.5 * strawLength + banks->packs->getPackBoxIdleLengthOnOneEnd()), banks->packs->packBoxFillMaterial, "EmptyPackBox");
+  auto lv_pack_box = new G4LogicalVolume(new G4Box("EmptyPackBox", 0.5*BcsPack::getPackBoxWidth(), 0.5*BcsPack::getPackBoxHeight(), 0.5 * strawLength + BcsPack::getPackBoxIdleLengthOnOneEnd()), BcsPack::packBoxFillMaterial, "EmptyPackBox");
   
   /// Add 8 BCS detector tubes ///
-  auto lv_front_tube = createTubeLV(banks->tubes->getFrontTubeConverterThickness(), strawLength); 
-  auto lv_back_tube = createTubeLV(banks->tubes->getBackTubeConverterThickness(), strawLength); 
-  G4RotationMatrix* tubeRotationMatrix = new G4RotationMatrix(0, 0, banks->packs->getTubeRotation());
+  auto lv_front_tube = createTubeLV(BcsTube::getFrontTubeConverterThickness(), strawLength); 
+  auto lv_back_tube = createTubeLV(BcsTube::getBackTubeConverterThickness(), strawLength); 
+  G4RotationMatrix* tubeRotationMatrix = new G4RotationMatrix(0, 0, BcsPack::getTubeRotation());
 
   for (int inPackTubeId = 0; inPackTubeId < 8; inPackTubeId++) {
     place((inPackTubeId % 4 < 2) ? lv_front_tube : lv_back_tube, 
-          banks->packs->getHorizontalTubeOffset(inPackTubeId), banks->packs->getVerticalTubeOffset(inPackTubeId), 0, 
+          BcsPack::getHorizontalTubeOffset(inPackTubeId), BcsPack::getVerticalTubeOffset(inPackTubeId), 0, 
           lv_pack_box, SILVER, getTubeVolumeNumber(packNumber, inPackTubeId, numberOfPacksForInvertedNumbering, numberOfPacks), 0, tubeRotationMatrix);
   }
   /// Add B4C panel behind detectors in 3 parts ///
-  const double B4CLengthHalf = 0.5*strawLength + banks->packs->getB4CLengthOverStrawOnOneEnd();
+  const double B4CLengthHalf = 0.5*strawLength + BcsPack::getB4CLengthOverStrawOnOneEnd();
 
   for (int partId = 0; partId < 3; partId++){
-    place(new G4Box("B4CPanel", 0.5*banks->packs->getB4CPartThickness(partId), 0.5*banks->packs->getB4CPartHeight(partId), B4CLengthHalf), 
-          banks->packs->B4CPanelMaterial, 
-          banks->packs->getB4CPartHorizontalOffset(partId), banks->packs->getB4CPartVerticalOffset(partId), 0, 
+    place(new G4Box("B4CPanel", 0.5*BcsPack::getB4CPartThickness(partId), 0.5*BcsPack::getB4CPartHeight(partId), B4CLengthHalf), 
+          BcsPack::B4CPanelMaterial, 
+          BcsPack::getB4CPartHorizontalOffset(partId), BcsPack::getB4CPartVerticalOffset(partId), 0, 
           lv_pack_box, G4Colour(0, 1, 0), -2, 0, new G4RotationMatrix());
     }
   /// Add Al behing the B4C panel in 2 parts ///
   for (int partId = 0; partId < 2; partId++){
-    place(new G4Box("AlPanel", 0.5*banks->packs->getAlPartThickness(partId), 0.5*banks->packs->getAlPartHeight(partId), B4CLengthHalf), 
-          banks->packs->AlPanelMaterial,
-          banks->packs->getAlPartHorizontalOffset(partId),  banks->packs->getAlPartVerticalOffset(partId), 0,
+    place(new G4Box("AlPanel", 0.5*BcsPack::getAlPartThickness(partId), 0.5*BcsPack::getAlPartHeight(partId), B4CLengthHalf), 
+          BcsPack::AlPanelMaterial,
+          BcsPack::getAlPartHorizontalOffset(partId),  BcsPack::getAlPartVerticalOffset(partId), 0,
           lv_pack_box, SILVER, -2, 0, new G4RotationMatrix());
     }
   return lv_pack_box;
@@ -148,7 +148,7 @@ G4LogicalVolume *GeoBCS::createCalibrationMaskLV(CalibMasks::CalibMasksBase cali
   const double maskFullWidthHalf = 0.5*calibMask.getWidth();
 
   auto lv_calibrationMask = new G4LogicalVolume(new G4Box("EmptyCalibMaskBox", maskThicknessHalf, maskHeightHalf, maskFullWidthHalf), 
-                                                 banks->calibMasks->maskBoxMaterial, "CalibMaskBox");
+                                                 CalibMasks::maskBoxMaterial, "CalibMaskBox");
   
   double offset = 0.0;
   int i = 0;
@@ -157,7 +157,7 @@ G4LogicalVolume *GeoBCS::createCalibrationMaskLV(CalibMasks::CalibMasksBase cali
     const double partWidth = *part;
     if(i % 2 == 0) { //The pattern is: maskPart ,slit, maskPart, slit...  
       place(new G4Box(maskName, maskThicknessHalf, maskHeightHalf, 0.5*partWidth), 
-          banks->calibMasks->maskMaterial,
+          CalibMasks::maskMaterial,
           0., 0., -maskFullWidthHalf + offset + 0.5*partWidth,
           lv_calibrationMask, DARKPURPLE, -5, 0, new G4RotationMatrix());
     }
@@ -181,7 +181,7 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
   const double bankSizeZHalf = 0.5* banks->getBankSize(bankId, 2);
 
   auto lv_bank = new G4LogicalVolume(new G4Box("EmptyPanelBox", bankSizeZHalf, bankSizeYHalf, bankSizeXHalf),
-                                     banks->packs->packBoxFillMaterial, "Bank");
+                                     BcsPack::packBoxFillMaterial, "Bank");
 
   // override lv_bank to subtract some empty part of front left and right banks where front top and bottom banks would overlap with them
   if (bankId == 8 || bankId == 6) {  
@@ -189,7 +189,7 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
     auto bankBoxCut = new G4Box("EmptyPanelBox", 15.0, 70.0, 60.0);
     auto bankBox = new G4SubtractionSolid("EmptyPanelBox", fullBankBox, bankBoxCut, 0, G4ThreeVector(-145.0, -42.0, -425.0));
     
-    lv_bank = new G4LogicalVolume(bankBox, banks->packs->packBoxFillMaterial, "Bank");
+    lv_bank = new G4LogicalVolume(bankBox, BcsPack::packBoxFillMaterial, "Bank");
   }
 
   int numberOfPacksForInvertedNumbering = 0; 
@@ -204,13 +204,13 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
           lv_bank, G4Colour(0, 1, 1), -2, 0, new G4RotationMatrix(0, 0, packRotation));
   }
 
-  const int numberOfBoronMasks = banks->masks->getNumberOfBoronMasks(bankId);
+  const int numberOfBoronMasks = BoronMasks::getNumberOfBoronMasks(bankId);
   for (int maskId = 0; maskId < numberOfBoronMasks; ++maskId){
     const std::string maskName = "BoronMask-"+std::to_string(bankId)+"-"+std::to_string(maskId);
-    place(new G4Box(maskName, 0.5*banks->masks->getSize(bankId, maskId, 2), 0.5*banks->masks->getSize(bankId, maskId, 1), 0.5*banks->masks->getSize(bankId, maskId, 0)),
-            banks->masks->maskMaterial, 
+    place(new G4Box(maskName, 0.5*BoronMasks::getSize(bankId, maskId, 2), 0.5*BoronMasks::getSize(bankId, maskId, 1), 0.5*BoronMasks::getSize(bankId, maskId, 0)),
+            BoronMasks::maskMaterial, 
             banks->getBoronMaskPosition(bankId, maskId, 2), banks->getBoronMaskPosition(bankId, maskId, 1), banks->getBoronMaskPosition(bankId, maskId, 0), 
-            lv_bank, BLACK, -2, 0, new G4RotationMatrix(0, 0, banks->masks->getRotation(bankId, maskId)));
+            lv_bank, BLACK, -2, 0, new G4RotationMatrix(0, 0, BoronMasks::getRotation(bankId, maskId)));
   }
 
   // Add BeamStop to the Rear Bank volume
@@ -220,7 +220,7 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
     const double detBankFrontDistance = banks->detectorSystemFrontDistanceFromBankFront(bankId);
     
     place(new G4Box(maskName, 0.5 * 1*Units::mm, 0.5 * 5*Units::cm, 0.5 * 5*Units::cm),
-          banks->masks->maskMaterial,
+          BoronMasks::maskMaterial,
           -bankSizeZHalf + detBankFrontDistance - 5*Units::cm, 0, 0,
           lv_bank, BLACK, -5, 0, new G4RotationMatrix());
   }
@@ -245,13 +245,13 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
 
 G4LogicalVolume *GeoBCS::createTriangularMaskLV(int maskId){
     //creating special triangular volume by subtraction of 2 boxes
-    const double xHalf = banks->masks->getHalfSizeOfTriangularMask(maskId, 0);
-    const double yHalf = banks->masks->getHalfSizeOfTriangularMask(maskId, 1);
-    const double zHalf = banks->masks->getHalfSizeOfTriangularMask(maskId, 2);
-    const double xSideToCut = 2 * xHalf - banks->masks->getCutPointOfTriangularMask(maskId, 0);
-    const double ySideToCut = 2 * yHalf - banks->masks->getCutPointOfTriangularMask(maskId, 1);
-    const double xCutDir = banks->masks->getCutDirOfTriangularMask(maskId, 0);
-    const double yCutDir = banks->masks->getCutDirOfTriangularMask(maskId, 1);
+    const double xHalf = BoronMasks::getHalfSizeOfTriangularMask(maskId, 0);
+    const double yHalf = BoronMasks::getHalfSizeOfTriangularMask(maskId, 1);
+    const double zHalf = BoronMasks::getHalfSizeOfTriangularMask(maskId, 2);
+    const double xSideToCut = 2 * xHalf - BoronMasks::getCutPointOfTriangularMask(maskId, 0);
+    const double ySideToCut = 2 * yHalf - BoronMasks::getCutPointOfTriangularMask(maskId, 1);
+    const double xCutDir = BoronMasks::getCutDirOfTriangularMask(maskId, 0);
+    const double yCutDir = BoronMasks::getCutDirOfTriangularMask(maskId, 1);
 
     auto triangularMaskBox = new G4Box("TriangularMaskBox", xHalf, yHalf, zHalf);
     const double xCutHalf = sqrt(pow(ySideToCut, 2) + pow(xSideToCut, 2)) / 2;
@@ -263,9 +263,9 @@ G4LogicalVolume *GeoBCS::createTriangularMaskLV(int maskId){
     auto cutCentre = G4ThreeVector(xCutDir * (xHalf - xCutHalf * cos(alpha) + yCutHalf * sin(alpha)), yCutDir * (-(ySideToCut - yHalf) + xCutHalf * sin(alpha) + yCutHalf * cos(alpha)), 0);
     auto triangularMask = new G4SubtractionSolid("TriangularMask", triangularMaskBox, triangularMaskCut, cutRotationMatrix, cutCentre);
 
-    const int bankId = banks->masks->getBankIdOfTriangularMask(maskId);
+    const int bankId = BoronMasks::getBankIdOfTriangularMask(maskId);
     const std::string maskName = "BoronMask-triangular-"+std::to_string(bankId)+"-"+std::to_string(maskId);
-    auto lv_triangularMask = new G4LogicalVolume(triangularMask, banks->masks->maskMaterial, maskName);
+    auto lv_triangularMask = new G4LogicalVolume(triangularMask, BoronMasks::maskMaterial, maskName);
 
     return lv_triangularMask;
 }
@@ -319,7 +319,7 @@ G4VPhysicalVolume* GeoBCS::Construct(){
     if (withCalibrationSlits && bankId!=6 && bankId!=8 ) {
       std::string calibMaskName = "lokiStandard-"+std::to_string(bankId);
       if (larmorRearBankExperiment) { calibMaskName = "larmorCdCalibMask"; }
-      const auto calibMask = banks->calibMasks->getCalibMask(calibMaskName);
+      const auto calibMask = CalibMasks::getCalibMask(calibMaskName);
       auto lv_calibrationMask = createCalibrationMaskLV(calibMask);
       
       place(lv_calibrationMask,
@@ -335,8 +335,8 @@ G4VPhysicalVolume* GeoBCS::Construct(){
     for (int maskId = 0; maskId <= 3; maskId++) {
       auto lv_triangularMask = createTriangularMaskLV(maskId);
 
-      const int bankId = banks->masks->getBankIdOfTriangularMask(maskId);       // 5 or 7
-      const double rotateDir = banks->masks->getCutDirOfTriangularMask(maskId, 1); // +- 1.0
+      const int bankId = BoronMasks::getBankIdOfTriangularMask(maskId);       // 5 or 7
+      const double rotateDir = BoronMasks::getCutDirOfTriangularMask(maskId, 1); // +- 1.0
 
       auto rotation = new G4RotationMatrix();
       rotation->rotateX(banks->getBankRotation(bankId, 2) * rotateDir);

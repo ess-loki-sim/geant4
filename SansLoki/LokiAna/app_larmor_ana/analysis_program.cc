@@ -11,7 +11,7 @@
 #include <fstream>
 #include "MCPL/mcpl.h"
 
-#include "G4GeoLoki/BcsBanks.hh"
+#include "G4GeoLoki/BcsTube.hh"
 //Griff analysis. See https://confluence.esss.lu.se/display/DG/Griff for more info.
 
 #ifndef M_PI
@@ -105,9 +105,7 @@ int main(int argc, char**argv) {
 
   const double sampleDetectorDistance = setup->geo().getParameterDouble("rear_detector_distance_m") *Units::m;
 
-  BcsBanks banks = BcsBanks(sampleDetectorDistance);
-
-  const double tubeRadius = banks.tubes->getTubeOuterRadius(); //12.7; //TODO get from object 
+  const double tubeRadius = BcsTube::getTubeOuterRadius(); //12.7;
 
   //float xmin = -53;
   const double ymin = -53; //20+1 tube in negative direction

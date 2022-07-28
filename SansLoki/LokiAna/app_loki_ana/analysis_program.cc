@@ -117,7 +117,7 @@ int main(int argc, char**argv) {
     banks = new PixelatedBanks(sampleDetectorDistance);
   }
 
-  const double tubeRadius = banks->tubes->getTubeOuterRadius(); //12.7; 
+  const double tubeRadius = BcsTube::getTubeOuterRadius(); //12.7; 
 
   //float xmin = -53;
   const double ymin = -53; //20+1 tube in negative direction

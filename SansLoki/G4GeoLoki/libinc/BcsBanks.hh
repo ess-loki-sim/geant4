@@ -10,12 +10,6 @@
 class BcsBanks {
 public:
   BcsBanks(double rearBankDistance): m_rearBankDistance(rearBankDistance){}
-  /// bcs tubes ///
-  const static BcsTube* tubes;
-
-  /// bcs packs ///
-  const static BcsPack* packs;
-
   /// banks ///
   static double getPackRotation();
   static double getPackPackDistance();// TODO better name?
@@ -35,12 +29,10 @@ public:
   static bool areTubesInverselyNumbered(const int bankId);
 
   /// boron masks ///
-  const static BoronMasks * masks;
   static double getBoronMaskPosition(const int bankId, const int maskId, const int axisIndex);
   static double getTriangularBoronMaskPosition(const int maskId, const int axisIndex);
 
-    /// calibration masks ///
-  const static CalibMasks* calibMasks;
+  /// calibration masks ///
   double getCalibMaskPosition(CalibMasks::CalibMasksBase calibMask,const int bankId, const int axisIndex) const;
 
 private:

@@ -24,15 +24,15 @@ void MaskingHelper::calcPixelCentrePositionForMasking(const int pixelId, const b
   double positionZ = getPixelPositionInStraw(pixelId, bankId);
 
   ///////// straw in tube /////////
-  double positionX = tubes->getStrawPositionX(strawId);
-  double positionY = tubes->getStrawPositionY(strawId);
+  double positionX = BcsTube::getStrawPositionX(strawId);
+  double positionY = BcsTube::getStrawPositionY(strawId);
 
   ///////// tube in pack ///////// 
   // apply tube rotation
-  coordinateRotation(positionX, positionY, packs->getTubeRotation());
+  coordinateRotation(positionX, positionY, BcsPack::getTubeRotation());
   // place tube in pack
-  positionX += packs->getHorizontalTubeOffset(inPackTubeId);
-  positionY += packs->getVerticalTubeOffset(inPackTubeId);
+  positionX += BcsPack::getHorizontalTubeOffset(inPackTubeId);
+  positionY += BcsPack::getVerticalTubeOffset(inPackTubeId);
 
   ///////// pack in bank /////////
   // apply pack rotation
