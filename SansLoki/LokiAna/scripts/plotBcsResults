@@ -13,8 +13,10 @@ from matplotlib.widgets import Slider
 from matplotlib import gridspec
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
-import BCS.BCSplotUtils as BCSplt
-import BCS.plotUtils2 as BCSplt2
+# import BCS.BCSplotUtils as BCSplt
+# import BCS.plotUtils2 as BCSplt2
+import LokiAna.BCSplotUtils as BCSplt
+import LokiAna.plotUtils2 as BCSplt2
 import argparse
 import re
 
@@ -66,7 +68,8 @@ parser.add_argument('-e', '--efficiency', action = 'store_true', help = 'Plot ef
 parser.add_argument('-be', '--bankEfficiency', action = 'store_true', help = 'Plot efficiency for the 9 detector banks')
 parser.add_argument('-hc', '--hitContribution', action = 'store_true', help = 'Plot contribution of banks to the total number of hits')
 parser.add_argument('-ot', '--overlayTheta', action = 'store_true', help = 'Overlay Thera source, conv, hit')
-parser.add_argument('-a', '--absorption', action = 'store_true', help = 'plot absorption chart')
+parser.add_argument('-a', '--absorption', action = 'store_true', help = 'Plot absorption chart')
+parser.add_argument('-na', '--noAvoid', action = 'store_true', help = 'Change absorption chart: eliminate the no avoid chategory.')
 parser.add_argument('-oil', '--overlayIncidentLambda', action = 'store_true', help = 'Overlay lambda inc of the 4 layers')
 parser.add_argument('-odl', '--overlayDetectionLambda', action = 'store_true', help = 'Overlay lambda hit of the 4 layers')
 
@@ -478,7 +481,7 @@ elif(args.bankEfficiency):
     plt.xlabel('Bank id')
     plt.axis([xAxisMin, xAxisMax, yAxisMin, yAxisMax])
 
-    plt.tight_layout(pad=0.3, w_pad=0.2, h_pad=0.1)
+    #plt.tight_layout(pad=0.3, w_pad=0.2, h_pad=0.1)
 
     if args.createPDF:
         plt.savefig('efficiencyBank.pdf')
@@ -535,7 +538,7 @@ elif(args.absorption):
     ticks=list()     
 
     for i in range(len(args.fileName)):
-        noAvoid = False
+        noAvoid = args.noAvoid
         [wavelength] = decomposeFileName(args.fileName[i])
         
         hc = sh.HistCollection(args.fileName[i])

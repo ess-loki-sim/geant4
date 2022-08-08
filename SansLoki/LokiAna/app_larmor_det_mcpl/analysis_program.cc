@@ -4,6 +4,7 @@
 #include "Utils/ArrayMath.hh"
 #include "Utils/NeutronMath.hh"
 #include "SimpleHists/HistCollection.hh"
+// #include "GriffB10Common/DetHitApproximation.hh"
 #include "LokiAna/DetHitApproximation.hh"
 #include <string>
 #include <cmath>
