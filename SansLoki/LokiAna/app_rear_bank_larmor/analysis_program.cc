@@ -10,7 +10,7 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
-#include "MCPL/mcpl.h"
+#include "LokiAna/DetectionFileCreator.hh"
 
 #include "G4GeoLoki/PixelatedBanks.hh"
 //Griff analysis. See https://confluence.esss.lu.se/display/DG/Griff for more info.
@@ -56,14 +56,9 @@ int main(int argc, char**argv) {
   primary_neutrons.addFilter(new GriffAnaUtils::TrackFilter_Primary());
   primary_neutrons.addFilter(new GriffAnaUtils::TrackFilter_PDGCode(2112));
 
-  mcpl_outfile_t detMcpl;
-  mcpl_particle_t *mcplParticle;
-
+  DetectionFileCreator* detectionFile = nullptr;
   if (createDetectionMcplFile == true) {
-    detMcpl = mcpl_create_outfile("detectionEvents.mcpl");
-    mcpl_hdr_add_comment(detMcpl, "Neutrons in this file are actually detection events and userflags are pixel ID's of hits. Created with ess_lokiana_rear_bank_larmor command.");
-    mcpl_enable_userflags(detMcpl);
-    mcplParticle = mcpl_get_empty_particle(detMcpl);
+    detectionFile = new DetectionFileCreator("detectionEvents.mcpl");
   }
 
   SimpleHists::HistCollection hc;
@@ -264,32 +259,14 @@ int main(int argc, char**argv) {
           }
 
           if (createDetectionMcplFile == true) {
-            mcplParticle->time = hit.eventHitTime()/Units::ms;
-            mcplParticle->weight = hit.eventHitWeight();
-            mcplParticle->userflags = pixelId; 
-
-            mcplParticle->position[0] = position_hit[0] / Units::cm; //not used
-            mcplParticle->position[1] = position_hit[1] / Units::cm; //not used
-            mcplParticle->position[2] = position_hit[2] / Units::cm; //not used
-            mcplParticle->direction[0] = 0; //dummy
-            mcplParticle->direction[1] = 0; //dummy
-            mcplParticle->direction[2] = 1; //dummy
-            mcplParticle->ekin = 0; //dummy
-            mcplParticle->pdgcode = 0; //dummy
-            
-            mcpl_add_particle(detMcpl, mcplParticle);
+            detectionFile->addDetectionEvent(pixelId, hit.eventHitTime()/Units::ms);
           }
-
         } // end hit in event
       } // end if conversion condition
     }//end of loop over primary neutrons
   } //end of event loop
 
-  //mcpl_close_outfile(f);
-  
-  if (createDetectionMcplFile == true) {
-    mcpl_close_outfile(detMcpl);
-  }
+  delete detectionFile;
   hc.saveToFile("bcsloki_sans", true);
   return 0;
 }

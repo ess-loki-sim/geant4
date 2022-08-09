@@ -10,7 +10,7 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
-#include "MCPL/mcpl.h"
+#include "LokiAna/DetectionFileCreator.hh"
 
 #include "G4GeoLoki/PixelatedBanks.hh"
 //Griff analysis. See https://confluence.esss.lu.se/display/DG/Griff for more info.
@@ -89,20 +89,9 @@ int main(int argc, char**argv) {
   segments_all.addFilter(new GriffAnaUtils::TrackFilter_Primary());
   segments_all.addFilter(new GriffAnaUtils::TrackFilter_PDGCode(2112));
 
-  //////////LOOOOOK HERE!!
-  /*mcpl_outfile_t f = mcpl_create_outfile("testbcs.mcpl");
-  mcpl_hdr_add_comment(f,"Neutrons in this file are actually detection hits and userflags are pixel ID's of hits. Created with ess_lokians_bcsloki_ana command.");
-  mcpl_enable_userflags(f);
-  mcpl_particle_t *p = mcpl_get_empty_particle(f);*/
-
-  mcpl_outfile_t detMcpl;
-  mcpl_particle_t *mcplParticle;
-
+  DetectionFileCreator* detectionFile = nullptr;
   if (createDetectionMcplFile == true) {
-    detMcpl = mcpl_create_outfile("detectionEvents.mcpl");
-    mcpl_hdr_add_comment(detMcpl, "Neutrons in this file are actually detection events and userflags are pixel ID's of hits. Created with ess_lokiana_loki_ana command.");
-    mcpl_enable_userflags(detMcpl);
-    mcplParticle = mcpl_get_empty_particle(detMcpl);
+    detectionFile = new DetectionFileCreator("detectionEvents.mcpl");
   }
 
   SimpleHists::HistCollection hc;
@@ -350,30 +339,6 @@ int main(int argc, char**argv) {
         ++seg_count_World;
         seg_length_World += segment->segmentLength();
         neutron_weight = segment->getTrack()->weight();
-        
-        /*if (seg_count_World > 1) {
-          auto step0 = segment->firstStep();
-          double dir_init[3];
-          Utils::normalise(step0->preMomentumArray(), dir_init);
-          auto pos_init = step0->preGlobalArray();
-          
-          if (dir_init[2] > 0) {
-            //isBackScattered = 1;
-
-            p->position[0] = pos_init[0] / Units::cm; //mcpl file unit
-            p->position[1] = pos_init[1] / Units::cm; //mcpl file unit
-            p->position[2] = pos_init[2] / Units::cm; //mcpl file unit
-            p->direction[0] = dir_init[0];
-            p->direction[1] = dir_init[1];
-            p->direction[2] = dir_init[2];
-            p->ekin = step0->preEKin();
-            p->time = step0->preTime();
-            p->weight = neutron->weight();
-            p->pdgcode = segment->getTrack()->pdgCode();
-
-            mcpl_add_particle(f, p);
-          }
-        }*/
       }
       if (seg_length_World /*&& isBackScattered == 1*/) {
         h_neutron_segment_number_World->fill(seg_count_World, neutron_weight);
@@ -388,54 +353,6 @@ int main(int argc, char**argv) {
           hasOnlyWorldSegments = false;
           break;
         }
-        /*
-        auto step0 = segment->firstStep();
-        double dir_init[3];
-        Utils::normalise(step0->preMomentumArray(), dir_init);
-          
-        if (dir_init[2] < 0) {
-           break;
-        }
-    
-        if(segment->volumeName() == "TubeWall") {
-          hasEnteredTubeWall = true;
-        }
-        else if(segment->volumeName() == "B4CPanel") {          
-          if(hasEnteredTubeWall) {
-            count_neutrons_enter_B4CPanel_after_TubeWall += 1;
-          }
-          else {
-            count_neutrons_enter_B4CPanel_before_TubeWall += 1;
-
-            auto pos_init = stepFirst->preGlobalArray();
-            double dir_first[3];
-            Utils::normalise(stepFirst->preMomentumArray(), dir_first);
-            p->position[0] = pos_init[0] / Units::cm; //mcpl file unit
-            p->position[1] = pos_init[1] / Units::cm; //mcpl file unit
-            p->position[2] = pos_init[2] / Units::cm; //mcpl file unit
-            p->direction[0] = dir_first[0];
-            p->direction[1] = dir_first[1];
-            p->direction[2] = dir_first[2];
-            p->ekin = stepFirst->preEKin();
-            p->time = stepFirst->preTime();
-            p->weight = neutron->weight();
-            p->pdgcode = segment->getTrack()->pdgCode();
-            // auto pos_init = step0->preGlobalArray();
-            // p->position[0] = pos_init[0] / Units::cm; //mcpl file unit
-            // p->position[1] = pos_init[1] / Units::cm; //mcpl file unit
-            // p->position[2] = pos_init[2] / Units::cm; //mcpl file unit
-            // p->direction[0] = dir_init[0];
-            // p->direction[1] = dir_init[1];
-            // p->direction[2] = dir_init[2];
-            // p->ekin = step0->preEKin();
-            // p->time = step0->preTime();
-            // p->weight = neutron->weight();
-            // p->pdgcode = segment->getTrack()->pdgCode();
-
-            mcpl_add_particle(f, p);
-          }
-          break;
-        }*/
       }
       if(hasOnlyWorldSegments) {
         count_neutrons_only_World += 1;
@@ -577,20 +494,7 @@ int main(int argc, char**argv) {
           h_panel_lambda_hit->fill(lambda_hit_calculated, panelNumber, hit.eventHitWeight());
 
           if (createDetectionMcplFile == true) {
-            mcplParticle->time = hit.eventHitTime()/Units::ms;
-            mcplParticle->weight = hit.eventHitWeight();
-            mcplParticle->userflags = pixelId; 
-
-            mcplParticle->position[0] = position_hit[0] / Units::cm; //not used
-            mcplParticle->position[1] = position_hit[1] / Units::cm; //not used
-            mcplParticle->position[2] = position_hit[2] / Units::cm; //not used
-            mcplParticle->direction[0] = 0; //dummy
-            mcplParticle->direction[1] = 0; //dummy
-            mcplParticle->direction[2] = 1; //dummy
-            mcplParticle->ekin = 0; //dummy
-            mcplParticle->pdgcode = 0; //dummy
-            
-            mcpl_add_particle(detMcpl, mcplParticle);
+            detectionFile->addDetectionEvent(pixelId, hit.eventHitTime()/Units::ms);
           }
 
         } // end hit in event
@@ -618,17 +522,11 @@ int main(int argc, char**argv) {
       else if (segL->volumeName() == "World") {
         count_neutrons_end_World += 1;
       }
-
-      
-
     }//end of loop over primary neutrons
   } //end of event loop
 
-  //mcpl_close_outfile(f);
-  
-  if (createDetectionMcplFile == true) {
-    mcpl_close_outfile(detMcpl);
-  }
+  delete detectionFile;
+
   hc.saveToFile("bcsloki_sans", true);
     
   int indexOffset = 11;

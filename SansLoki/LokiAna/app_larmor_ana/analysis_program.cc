@@ -10,7 +10,7 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
-#include "MCPL/mcpl.h"
+#include "LokiAna/DetectionFileCreator.hh"
 
 #include "G4GeoLoki/BcsTube.hh"
 //Griff analysis. See https://confluence.esss.lu.se/display/DG/Griff for more info.
@@ -86,20 +86,9 @@ int main(int argc, char**argv) {
   segments_TubeWall.addFilter(new GriffAnaUtils::TrackFilter_Primary());
   segments_TubeWall.addFilter(new GriffAnaUtils::TrackFilter_PDGCode(2112));
 
-  //////////LOOOOOK HERE!!
-  /*mcpl_outfile_t f = mcpl_create_outfile("testbcs.mcpl");
-  mcpl_hdr_add_comment(f,"Neutrons in this file are actually detection hits and userflags are pixel ID's of hits. Created with ess_lokians_bcsloki_ana command.");
-  mcpl_enable_userflags(f);
-  mcpl_particle_t *p = mcpl_get_empty_particle(f);*/
-
-  mcpl_outfile_t detMcpl;
-  mcpl_particle_t *mcplParticle;
-
+  DetectionFileCreator* detectionFile = nullptr;
   if (createDetectionMcplFile == true) {
-    detMcpl = mcpl_create_outfile("detectionEvents.mcpl");
-    mcpl_hdr_add_comment(detMcpl, "Neutrons in this file are actually detection events and userflags are pixel ID's of hits. Created with ess_lokiana_loki_ana command.");
-    mcpl_enable_userflags(detMcpl);
-    mcplParticle = mcpl_get_empty_particle(detMcpl);
+    detectionFile = new DetectionFileCreator("detectionEvents.mcpl");
   }
 
   SimpleHists::HistCollection hc;
@@ -422,74 +411,16 @@ int main(int argc, char**argv) {
           h_bank_lambda_hit -> fill(lambda_hit_calculated, bankId_conv, hit.eventHitWeight());
 
           if (createDetectionMcplFile == true) {
-            //const int centrePixelId = getPixelId(tubeId_conv, strawId_conv, 0.0);
-            //const int centrePixelId = getPixelId(0, 0, 0.0);
-            //mcplParticle->userflags = centrePixelId + IDFdetectorPixelOffset; 
-            
-            mcplParticle->time = hit.eventHitTime()/Units::ms;
-            mcplParticle->weight = hit.eventHitWeight();
-            mcplParticle->userflags = pixelId + IDFdetectorPixelOffset; 
-
-            mcplParticle->position[0] = position_hit[0] / Units::cm; //not used
-            mcplParticle->position[1] = position_hit[1] / Units::cm; //not used
-            mcplParticle->position[2] = position_hit[2] / Units::cm; //not used
-            mcplParticle->direction[0] = 0; //dummy
-            mcplParticle->direction[1] = 0; //dummy
-            mcplParticle->direction[2] = 1; //dummy
-            mcplParticle->ekin = 0; //dummy
-            mcplParticle->pdgcode = 0; //dummy
-            
-            mcpl_add_particle(detMcpl, mcplParticle);
+            detectionFile->addDetectionEvent(pixelId + IDFdetectorPixelOffset, hit.eventHitTime()/Units::ms);
           }
-
         } // end hit in event
       } // end if conversion condition
     }//end of loop over primary neutrons
   } //end of event loop
 
-  //mcpl_close_outfile(f);
-  if (createDetectionMcplFile == true) {
-    mcpl_close_outfile(detMcpl);
-  }
+  delete detectionFile;
+
   hc.saveToFile("larmor_bcs", true);
-
-  
-
-  // //BEGIN - TEST MCPL FILE
-  // mcpl_outfile_t singleHitMCPL;
-  // mcpl_particle_t *testParticle;
-  // singleHitMCPL = mcpl_create_outfile("singleDetectionEvent.mcpl");
-  // mcpl_hdr_add_comment(singleHitMCPL, "Neutrons in this file are actually detection events and userflags are pixel ID's of hits. Created with ess_lokiana_loki_ana command.");
-  // mcpl_enable_userflags(singleHitMCPL);
-  // testParticle = mcpl_get_empty_particle(singleHitMCPL);
-
-  // testParticle->time = 5;
-  // testParticle->weight = 1.0;
-  // testParticle->userflags = 10;    //detIndex
-  // testParticle->position[0] = 42; //not used
-  // testParticle->position[1] = 42; //not used
-  // testParticle->position[2] = 42; //not used
-  // testParticle->direction[0] = 0; //dummy
-  // testParticle->direction[1] = 0; //dummy
-  // testParticle->direction[2] = 1; //dummy
-  // testParticle->ekin = 0;         //dummy
-  // testParticle->pdgcode = 0;      //dummy
-  // mcpl_add_particle(singleHitMCPL, testParticle);
-  
-  // testParticle->time = 6;
-  // testParticle->weight = 1.0;
-  // testParticle->userflags = 11;    //detIndex
-  // mcpl_add_particle(singleHitMCPL, testParticle);
-
-  // testParticle->time = 7;
-  // testParticle->weight = 1.0;
-  // testParticle->userflags = 12;    //detIndex
-  // mcpl_add_particle(singleHitMCPL, testParticle);
-
-  // mcpl_close_outfile(singleHitMCPL);
-  // // END - TEST MCPL FILE
 
   return 0;
 }
-
-
