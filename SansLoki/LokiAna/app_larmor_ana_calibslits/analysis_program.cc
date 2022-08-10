@@ -7,33 +7,28 @@
 #include <string>
 #include <cmath>
 #include <iostream>
-#include <fstream>
-#include "MCPL/mcpl.h"
-
 #include "G4GeoLoki/PixelatedBanks.hh"
-//Griff analysis. See https://confluence.esss.lu.se/display/DG/Griff for more info.
+#include "LokiAna/MaskFileCreator.hh"
+
+//Griff analysis. See https://confluence.esss.lu.se/display/DGCODE/Griff for more info.
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846 //  pi
 #endif
 
 
-int main(int argc, char **argv)
-{
-
+int main(int argc, char **argv) {
   Core::catch_fpe();
   GriffDataReader dr(argc, argv);
 
   auto setup = dr.setup();
   auto &geo = setup->geo();
-  //printf("QQQ=============  %s \n", geo.getName().c_str());
-  if (geo.getName() != "G4GeoLoki/GeoBCSBanks" && geo.getName() != "G4GeoBCS/GeoLarmorBCSExperiment")
-  {
+  auto &gen = setup->gen();
+
+  if (geo.getName() != "G4GeoLoki/GeoBCSBanks" && geo.getName() != "G4GeoBCS/GeoLarmorBCSExperiment") {
     printf("Error: Wrong setup for this analysis\n");
     return 1;
-  }
-
-  auto &gen = setup->gen();
+  }  
 
   setup->dump();
 
@@ -74,10 +69,8 @@ int main(int argc, char **argv)
   auto countTestGeantino = h_counters->addCounter("all_geantino");
   auto countTestGeantinoAbsInMask = h_counters->addCounter("geantino_in_Mask");
 
-  bool enteredArrayGeantino[numberOfPixels]; //array to find pixels the geantinos enter
-  bool enteredArrayGeantino_masking[numberOfPixels]; //array to find pixels the geantinos enter
-  memset(enteredArrayGeantino, false, sizeof(enteredArrayGeantino[0]) * numberOfPixels); //set all values zero
-  memset(enteredArrayGeantino_masking, false, sizeof(enteredArrayGeantino_masking[0]) * numberOfPixels); //set all values zero
+  const int indexOffset = 11;
+  MaskFileCreator masking("maskFile.xml", numberOfPixels, indexOffset);
 
   ///const double xWidthVacuumTankEnd = 687.4 *Units::mm;
   ///const double yHeightVacuumTankEnd = 600 *Units::mm;
@@ -111,7 +104,7 @@ int main(int argc, char **argv)
   }
   const double xBeamOffset = tmp_x_offset_meters ? tmp_x_offset_meters :tmp_dx_meter;
 
-  while (dr.loopEvents()){
+  while (dr.loopEvents()) {
     while (auto trk_geantino = primary_geantinos.next()) {
       countTestGeantino += 1;
 
@@ -133,7 +126,7 @@ int main(int argc, char **argv)
       bool geantinoAbsorbed = false;
       for (auto seg = trk_geantino->segmentBegin(); seg != trk_geantino->segmentEnd(); ++seg) {
 
-        if (!geantinoAbsorbed && (seg->volumeName().find("BoronMask-") != std::string::npos || seg->volumeName() == "B4CPanel" || seg->volumeName() == "AlPanel")){
+        if (!geantinoAbsorbed && (seg->volumeName().find("BoronMask-") != std::string::npos || seg->volumeName() == "B4CPanel" || seg->volumeName() == "AlPanel")) {
           countTestGeantinoAbsInMask += 1;
           geantinoAbsorbed = true;
           //break;
@@ -146,41 +139,21 @@ int main(int argc, char **argv)
           auto step = seg->lastStep();
           const int pixelId = banks.getPixelId(bankId_conv, tubeId_conv, strawId_conv, step->postGlobalX(), step->postGlobalY());
 
-          if (enteredArrayGeantino[pixelId] == false) { //only the first time
-            h_neutron_pixel_geantino->fill(pixelId % strawPixelNumber, std::floor(pixelId / strawPixelNumber), 1);
-            enteredArrayGeantino[pixelId] = true;
-          }
-          if (!geantinoAbsorbed && enteredArrayGeantino_masking[pixelId] == false) {
+          if (!geantinoAbsorbed && !masking.isPixelEntered(pixelId)) {
             h_neutron_pixel_geantino_masking->fill(pixelId % strawPixelNumber, std::floor(pixelId / strawPixelNumber), 1);
-            enteredArrayGeantino_masking[pixelId] = true;
+            masking.setPixelEntered(pixelId);
+          }
+          if (!masking.isPixelEnteredAimingCheck(pixelId)) { // check if all pixels are aimed at
+            h_neutron_pixel_geantino->fill(pixelId % strawPixelNumber, std::floor(pixelId / strawPixelNumber), 1);
+            masking.setPixelEnteredAimingCheck(pixelId);
           }
         }
       }
     }
   }   //end of event loop
 
+  masking.createMaskFile();
   hc.saveToFile("bcsloki_masking", true);
-
-  int indexOffset = 11;
-  std::ofstream maskFile;
-  maskFile.open("maskFile.xml");
-  maskFile << "<?xml version=\"1.0\"?>\n";
-  maskFile << "<detector-masking>\n";
-  maskFile << "\t<group>\n";
-  maskFile << "\t\t<detids> ";
-
-  for (int i = 0; i < numberOfPixels; i++)
-  {
-    if (enteredArrayGeantino_masking[i] == false)
-    {
-      maskFile << i + indexOffset << ", "; //TODO OFFSET?
-    }
-  }
-  maskFile.seekp(-2, std::ios_base::cur); //Go back with the write pointer to override the last coma and space ", "
-  maskFile << " </detids>\n";
-  maskFile << "\t</group>\n";
-  maskFile << "</detector-masking>";
-  maskFile.close();
 
   return 0;
 }

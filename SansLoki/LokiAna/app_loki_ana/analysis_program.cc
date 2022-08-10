@@ -13,30 +13,11 @@
 #include "LokiAna/DetectionFileCreator.hh"
 
 #include "G4GeoLoki/PixelatedBanks.hh"
-//Griff analysis. See https://confluence.esss.lu.se/display/DG/Griff for more info.
+//Griff analysis. See https://confluence.esss.lu.se/display/DGCODE/Griff for more info.
 
 #ifndef M_PI
 #define M_PI  3.14159265358979323846  //  pi
 #endif
-
-/// /// TODOGEANTINO
-bool getPrimaryNeutronAndGeantino(GriffDataReader& dr,
-                                                  const GriffDataRead::Track*& trk_neutron,
-                                                  const GriffDataRead::Track*& trk_geantino)
-{
-  if (dr.nPrimaryTracks()!=2)
-    return false;
-  trk_neutron = dr.primaryTrackBegin();
-  trk_geantino = trk_neutron +1;
-  if (trk_neutron->pdgCode()!=2112)
-    std::swap(trk_neutron,trk_geantino);
-  if (trk_neutron->pdgCode()!=2112)
-    return false;
-  if (trk_geantino->pdgCode()!=999)
-    return false;
-  return true;
-}
-
 
 int main(int argc, char**argv) {
   const bool createDetectionMcplFile = true;
@@ -173,15 +154,6 @@ int main(int argc, char**argv) {
        h_neutron_pixel_hit->setXLabel("Pixel ID along straw");
        h_neutron_pixel_hit->setYLabel("Straw ID");
 
-  auto h_neutron_pixel_geantino = hc.book2D("Show pixels the geantinos entered", 256, 0, 256, numberOfPixels/256, 0, numberOfPixels/256, "h_neutron_pixel_geantino");
-       h_neutron_pixel_geantino->setXLabel("Pixel ID along straw");
-       h_neutron_pixel_geantino->setYLabel("Straw ID");
-
-  auto h_neutron_pixel_geantino_masking = hc.book2D("Show pixels the geantinos entered (no mask transmission)", 256, 0, 256, numberOfPixels/256, 0, numberOfPixels/256, "h_neutron_pixel_geantino_masking");
-       h_neutron_pixel_geantino_masking->setXLabel("Pixel ID along straw");
-       h_neutron_pixel_geantino_masking->setYLabel("Straw ID");
-
-
   const int numberOfPixels_rear = banks->getNumberOfPixels(0);
   auto h_neutron_pixel_rear_hit = hc.book2D("Sum weight of hits in pixels of rear bank (hit)", 256, 0, 256, numberOfPixels_rear/256, 0, numberOfPixels_rear/256, "h_neutron_pixel_rear_hit");
        h_neutron_pixel_rear_hit->setXLabel("Pixel ID along straw");
@@ -251,8 +223,6 @@ int main(int argc, char**argv) {
   auto count_neutrons_hit = h_neutron_counters->addCounter("count_neutrons_hit");
   auto count_neutrons_entering_B4CPanel = h_neutron_counters->addCounter("count_neutrons_entering_B4CPanel");
   auto count_neutrons_only_World = h_neutron_counters->addCounter("count_neutrons_only_World");
-  auto countTestGeantino = h_neutron_counters->addCounter("all_geantino");
-  auto countTestGeantinoAbsInMask = h_neutron_counters->addCounter("geantino_in_Mask");
   //auto count_neutrons_enter_B4CPanel_before_TubeWall = h_neutron_counters->addCounter("count_neutrons_enter_B4CPanel_before_TubeWall");
   //auto count_neutrons_enter_B4CPanel_after_TubeWall = h_neutron_counters->addCounter("count_neutrons_enter_B4CPanel_after_TubeWall");
 
@@ -271,14 +241,7 @@ int main(int argc, char**argv) {
     return 1;
   } 
 
-  bool enteredArrayGeantino [1605632]; //array to find pixels the geantinos enter
-  bool enteredArrayGeantino_masking[1605632]; //array to find pixels the geantinos enter
-  memset(enteredArrayGeantino, false, sizeof(enteredArrayGeantino[0]) * numberOfPixels); //set all values zero
-  memset(enteredArrayGeantino_masking, false, sizeof(enteredArrayGeantino_masking[0]) * numberOfPixels); //set all values zero
-
-  while (dr.loopEvents()) {  
-    
-    
+  while (dr.loopEvents()) {
     while (auto neutron = primary_neutrons.next()) {
       count_initial_neutrons += 1;
 
@@ -294,46 +257,6 @@ int main(int argc, char**argv) {
       double seg_length_World = 0.0;
       double neutron_weight = 0.0;
       //int isBackScattered = 0;
-
-            /// TODOGEANTINO
-      const GriffDataRead::Track* trk_neutron;
-      const GriffDataRead::Track* trk_geantino;
-      //if (!getPrimaryNeutronAndGeantino(dr,trk_neutron,trk_geantino)) {
-      if (getPrimaryNeutronAndGeantino(dr,trk_neutron,trk_geantino)) {
-        countTestGeantino += 1;
-
-        bool geantinoAbsorbed = false;
-        for (auto seg = trk_geantino->segmentBegin(); seg!=trk_geantino->segmentEnd(); ++seg){
-               
-          
-          if (!geantinoAbsorbed && (seg->volumeName().find("BoronMask-") != std::string::npos || seg->volumeName() == "B4CPanel")){
-            countTestGeantinoAbsInMask += 1;
-            geantinoAbsorbed = true;
-            //break;
-          }
-          else if (seg->volumeName()=="Converter"){
-            const int strawId_conv = seg->volumeCopyNumber(1);
-            const int tubeId_conv = seg->volumeCopyNumber(3);
-            const int bankId_conv = seg->volumeCopyNumber(5);
-
-            auto step = seg->lastStep();
-            const int pixelId = banks->getPixelId(bankId_conv, tubeId_conv, strawId_conv, step->postGlobalX(), step->postGlobalY());
-           
-            //TESTING
-            
-            if (enteredArrayGeantino[pixelId] == false){ //only the first time
-               h_neutron_pixel_geantino->fill(pixelId%256, std::floor(pixelId/256), 1);
-               enteredArrayGeantino[pixelId] = true;
-            } 
-            if (!geantinoAbsorbed && enteredArrayGeantino_masking[pixelId] == false ){
-              h_neutron_pixel_geantino_masking->fill(pixelId%256, std::floor(pixelId/256), 1);
-              enteredArrayGeantino_masking[pixelId] = true;
-            }
-          }
-        }
-        
-      }
-      /// TODOGEANTINO END
 
       while (auto segment = segments_World.next()) { // loop over all segments of the World
         ++seg_count_World;
@@ -406,9 +329,6 @@ int main(int argc, char**argv) {
       if (segments_B4CPanel.next()) {
         count_neutrons_entering_B4CPanel += 1;
       }
-      
-
-
 
       auto segL = neutron->lastSegment();
       if (segL->volumeName()=="Converter") {
@@ -428,8 +348,6 @@ int main(int argc, char**argv) {
         const int strawId_conv = segL->volumeCopyNumber(1);
         const int tubeId_conv = segL->volumeCopyNumber(3);
         const int bankId_conv = segL->volumeCopyNumber(5);
-
-        
 
         h_neutron_zy_conv->fill(position_conv[2]/Units::mm, position_conv[1]/Units::cm, neutron->weight());
         h_neutron_zy_big_conv->fill(position_conv[2]/Units::mm, position_conv[1]/Units::mm, neutron->weight());
@@ -488,7 +406,6 @@ int main(int argc, char**argv) {
           if(bankId_conv == 0) {//rear bank only
             h_neutron_Q_rear_bank_hit->fill(Q_hit_calculated, hit.eventHitWeight());
           }
-          
 
           h_bank_lambda_hit -> fill(lambda_hit_calculated, bankId_conv, hit.eventHitWeight());
           h_panel_lambda_hit->fill(lambda_hit_calculated, panelNumber, hit.eventHitWeight());
@@ -529,26 +446,5 @@ int main(int argc, char**argv) {
 
   hc.saveToFile("bcsloki_sans", true);
     
-  int indexOffset = 11;
-  std::ofstream maskFile;
-  maskFile.open ("maskFile.xml");
-  maskFile << "<?xml version=\"1.0\"?>\n";
-  maskFile << "<detector-masking>\n";
-  maskFile << "\t<group>\n";
-  maskFile << "\t\t<detids> ";
-  
-  for(int i=0; i<numberOfPixels; i++){
-    if(enteredArrayGeantino_masking[i] == false){
-      maskFile << i+indexOffset <<", "; //TODO OFFSET?
-    }
-  }
-  maskFile.seekp(-2, std::ios_base::cur);//Go back with the write pointer to override the last coma and space ", "
-  maskFile << " </detids>\n";
-  maskFile << "\t</group>\n";
-  maskFile << "</detector-masking>";
-  maskFile.close();
-
   return 0;
 }
-
-
