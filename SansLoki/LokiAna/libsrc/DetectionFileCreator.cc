@@ -5,7 +5,7 @@ DetectionFileCreator::DetectionFileCreator(const char* fileName): m_fileName(fil
   mcpl_hdr_add_comment(this->detMcpl, "Neutrons in this file are actually detection events, and userflags are pixel ID's of hits. Created with the DetectionFileCreator class.");
   mcpl_enable_userflags(this->detMcpl);
   this->mcplParticle = mcpl_get_empty_particle(this->detMcpl);
-  initialteMcplParticle();
+  initiateMcplParticle();
 }
 
 DetectionFileCreator::~DetectionFileCreator() {
@@ -13,7 +13,7 @@ DetectionFileCreator::~DetectionFileCreator() {
   std::cout << "Created detection event file: " << this->m_fileName << std::endl;
 }
 
-void DetectionFileCreator::initialteMcplParticle() {
+void DetectionFileCreator::initiateMcplParticle() {
   this->mcplParticle->weight = 1.0;
   this->mcplParticle->position[0] = 0.0;
   this->mcplParticle->position[1] = 0.0;

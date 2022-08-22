@@ -16,7 +16,7 @@ private:
   mcpl_outfile_t detMcpl;
   mcpl_particle_t *mcplParticle;
 
-  void initialteMcplParticle();
+  void initiateMcplParticle();
 };
 
 #endif

@@ -7,7 +7,7 @@
 class MaskFileCreator {
 public:
   MaskFileCreator(const char* fileName, const int numberOfPixels, const int indexOffset);
-   
+
   bool isPixelEntered(const int pixelNumber) const;
   void setPixelEntered(const int pixelNumber);
   bool isPixelEnteredAimingCheck(const int pixelNumber) const;
@@ -19,6 +19,8 @@ private:
   const int m_indexOffset;
   std::unique_ptr<bool[]> m_enteredPixels;
   std::unique_ptr<bool[]> m_enteredPixelsAimingCheck;
+
+  void checkAimingPixelCoverage() const;
 };
 
 #endif
