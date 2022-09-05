@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ARGS="rear_detector_distance_m=4.099  aiming_rear_bank_pixel_number=2048 analysis_rear_bank_pixel_number=512 rear_detector_only=True with_beamstop=False larmor_rear_bank_experiment=True with_calibration_slits=True event_gen=larmorCalibrationSlits x_offset_millimeters=5" 
-ess_lokisim_bcsbanks_sim $ARGS -lESS_Empty |egrep '^G4Launcher::Launcher|NXS'
+ess_lokisim_bcsbanks_sim $ARGS -lESS_Empty |grep '^G4Launcher::Launcher'
 if [ ${PIPESTATUS[0]} == 0 ]; then
     ess_lokiana_larmor_ana_calibslits lokisim.griff
 else

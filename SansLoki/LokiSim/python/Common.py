@@ -43,12 +43,10 @@ def launch(geo):
         from  LokiSim.FloodSourceGen import FloodSourceGen as Gen
         gen = Gen()
     elif launcher.getParameterString('event_gen')=='masking':
-        print()
         from  LokiSim.MaskingSourceGen import MaskingSourceGen as Gen
         #gen = Gen(geo.rear_detector_distance_m) #gets default value instead of user defined
         gen = Gen()
     elif launcher.getParameterString('event_gen')=='larmorCalibrationSlits':
-        print()
         from  LokiSim.CalibSlitSourceGen import CalibrationSlitSourceGen as Gen
         gen = Gen()
     else:

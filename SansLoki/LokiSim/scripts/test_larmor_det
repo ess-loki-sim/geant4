@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ARGS="det_only=true"
-ess_lokisim_larmor_sim $ARGS -lESS_Empty |egrep '^G4Launcher::Launcher|NXS'
+ess_lokisim_larmor_sim $ARGS -lESS_Empty |grep '^G4Launcher::Launcher'
 if [ ${PIPESTATUS[0]} == 0 ]; then
     ess_lokiana_larmor_det_mcpl larmor_CountingGas_Converter.griff
 else

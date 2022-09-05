@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ARGS="rear_detector_distance_m=4.099 analysis_rear_bank_pixel_number=512 with_beamstop=False larmor_rear_bank_experiment=True event_gen=flood x_offset_meters=0.005"
-ess_lokisim_bcsbanks_sim $ARGS -lESS_Empty |egrep '^G4Launcher::Launcher|NXS'
+ess_lokisim_bcsbanks_sim $ARGS -lESS_Empty |grep '^G4Launcher::Launcher'
 if [ ${PIPESTATUS[0]} == 0 ]; then
     ess_lokiana_rear_bank_larmor lokisim.griff
 else

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ess_lokisim_bcsbanks_sim -t -lESS_Empty && \
-ess_lokisim_bcsbanks_sim -lESS_Empty |egrep '^G4Launcher::Launcher|NXS'
+ess_lokisim_bcsbanks_sim -lESS_Empty |grep '^G4Launcher::Launcher'
 if [ ${PIPESTATUS[0]} == 0 ]; then
     ess_lokiana_loki_ana lokisim.griff
 else
