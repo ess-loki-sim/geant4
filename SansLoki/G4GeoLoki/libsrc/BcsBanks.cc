@@ -293,6 +293,9 @@ bool BcsBanks::areTubesInverselyNumbered(const int bankId) {
   return (bankId == 1 || bankId == 2 || bankId == 5 || bankId == 6);
 }
 
+double BcsBanks::getLarmor2022ExperimentBankPositionY() {
+  return 0.5 * getBankSize(0, 1) - 1155 *Units::mm + (4+33) *Units::mm; // beam centre at 1155 mm above floor, including the 4 mm electrical isolation layer, that is 33 mm above the Larmor floor (due to the weels)
+}
 /// Borom Masks ///
 
 double BcsBanks::getBoronMaskPosition(const int bankId, const int maskId, const int axisIndex) {

@@ -1,18 +1,38 @@
 #!/usr/bin/env python3
 import G4GeoLoki.LokiMaskingHelper as Mask
+import argparse
 
-aimHelper = Mask.MaskingHelper(4.099 * 1000) #[mm]
-pixelFile = open("pixelFile_oldNumbering.txt", "w")
+parser = argparse.ArgumentParser(description = 'Exporting 3D pixel positions of the LOKI detector array based on the Geant4 geometry. The resuilting file is a csv file with the following columns: pixelId, pixelCentreX [m], pixelCentreY [m], pixelCentreZ [m]. Axes represent the beam\'s point of view: X - horizontal (positive to the left), Y - vertical (positive up), Z - distance along the beam (by default distance from the sample position).')
+parser.add_argument('-f', '--fileName', default='LokiPixelFile', help = 'Output file name (.txt appended)')
+parser.add_argument('-rear', '--rearDetectorDistance', type=float, default=5.0, help = 'Rear detector distance [m] (defaults to 5 m)')
+parser.add_argument('-ssd', '--sourceSampleDistance', type=float, default=0.0, help = 'Source sample distance [m] (defaults to 0 m)')
+parser.add_argument('-pn', '--rearDetectorPixelNumber', type=int, help = 'Rear detector pixel number (defaults the the value defined in the geometry)')
+parser.add_argument('-opn', '--oldPixelNumbering', action = 'store_true', help = 'Use old pixel (tube) numbering')
+parser.add_argument('-le', '--larmor2022experiment', action = 'store_true', help = 'User Larmor 2022 experiment setup')
 
-numberOfPixels = aimHelper.getTotalNumberOfPixels()
+args = parser.parse_args()
 
-for pixelId in range(numberOfPixels):
-  aimHelper.calcPixelCentrePositionForMasking(pixelId, True)
+rearBankDistance = args.rearDetectorDistance
+if args.larmor2022experiment:
+  rearBankDistance = 4.099
 
-  pixelCentreX = aimHelper.getPixelCentrePosition(0) 
-  pixelCentreY = aimHelper.getPixelCentrePosition(1) -207.94792 #-214.975 #Larmor vertical offset
-  pixelCentreZ = aimHelper.getPixelCentrePosition(2) + 25.61 *1000 #Larmor SSD (source to sample distance)
+if args.rearDetectorPixelNumber is not None:
+  aimHelper = Mask.MaskingHelper(rearBankDistance * 1000, args.rearDetectorPixelNumber)
+else:
+  aimHelper = Mask.MaskingHelper(rearBankDistance * 1000)
 
-  pixelFile.write( str(pixelId) + '\t' + str(pixelCentreX/1000) + '\t' + str(pixelCentreY/1000) + '\t' + str(pixelCentreZ/1000) + "\n" )
+oldNumbering = args.oldPixelNumbering
+larmor2022 = args.larmor2022experiment
+ssd = args.sourceSampleDistance
 
-pixelFile.close()
+fileName = f"{args.fileName}.txt"
+with open(fileName, "w") as pixelFile:
+  numberOfPixels = aimHelper.getTotalNumberOfPixels()
+  for pixelId in range(numberOfPixels):
+
+    pixelCentreX, pixelCentreY, pixelCentreZ = aimHelper.getPixelCentrePositionsForMasking(pixelId, oldNumbering, larmor2022)
+    pixelCentreZ = pixelCentreZ + ssd *1000 #Larmor SSD is 25.61 (source to sample distance)
+
+    pixelFile.write( str(pixelId) + ', ' + str(pixelCentreX/1000) + ', ' + str(pixelCentreY/1000) + ', ' + str(pixelCentreZ/1000) + "\n" )
+
+print(f"File created: {fileName}")

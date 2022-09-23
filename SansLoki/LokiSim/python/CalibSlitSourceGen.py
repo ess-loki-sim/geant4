@@ -6,9 +6,10 @@ import Core.Units as Units
 import G4GeoLoki.LokiMaskingHelper as Mask
 
 class CalibrationSlitSourceGen(G4CustomPyGen.GenBase):
-    #def __init__(self, rear_detector_distance_m):
-    #    G4CustomPyGen.GenBase.__init__(self)
-    #    self.rear_detector_distance_m = rear_detector_distance_m
+    def __init__(self, rearDetectorDistance, larmor2022experiment):
+        super().__init__()
+        self.rearDetectorDistance = rearDetectorDistance
+        self.larmor2022experiment = larmor2022experiment
 
     def declare_parameters(self):
         self.addParameterDouble("x_offset_millimeters", 0.0)
@@ -16,6 +17,8 @@ class CalibrationSlitSourceGen(G4CustomPyGen.GenBase):
         self.addParameterDouble("y_width_meters", 0.0)
         self.addParameterInt("aiming_rear_bank_pixel_number", 512) #used only for aiming, NOT for analysis
         #self.addParameterDouble("z_width_meters", 0.001)
+        self.addParameterBoolean("aiming_old_tube_numbering", False)
+        self.addParameterBoolean("aiming_larmor_2022_experiment", False)
 
     def init_generator(self,gun):
         gun.set_type('geantino') #neutron
@@ -30,7 +33,7 @@ class CalibrationSlitSourceGen(G4CustomPyGen.GenBase):
         ##self.aimHelper = Mask.bcsBanks(self.rear_detector_distance_m *Units.m) #doesn't work
         #self.aimHelper = Mask.bcsBanks(4.420 *Units.m)
         #self.aimHelper = Mask.bcsBanks(4.068 *Units.m)
-        self.aimHelper = Mask.MaskingHelper(4.099 *Units.m, self.aiming_rear_bank_pixel_number)
+        self.aimHelper = Mask.MaskingHelper(self.rearDetectorDistance *Units.m, self.aiming_rear_bank_pixel_number)
         self.totalNumberOfPixels = self.aimHelper.getTotalNumberOfPixels()
 
     def generate_event(self,gun):
@@ -47,11 +50,8 @@ class CalibrationSlitSourceGen(G4CustomPyGen.GenBase):
         # Direction - toward the centre of a pixel
         #bank pixel limits: 0, 401408, 516096, 602112, 716800, 802816, 1003520, 1232896, 1376256, 1605632
         pixelId = ((self._i + 0) % self.totalNumberOfPixels) 
-        self.aimHelper.calcPixelCentrePositionForMasking(pixelId, True) # self._i + math.floor(self.rand()*256) + 401408  # 17*7*256 + 256
-        
-        pixelCentreX = self.aimHelper.getPixelCentrePosition(0)
-        pixelCentreY = self.aimHelper.getPixelCentrePosition(1) -207.94792 #-214.975 # - 211.94792  #magical offset of the bank...
-        pixelCentreZ = self.aimHelper.getPixelCentrePosition(2) 
+
+        pixelCentreX, pixelCentreY, pixelCentreZ = self.aimHelper.getPixelCentrePositionsForMasking(pixelId, self.aiming_old_tube_numbering, self.larmor2022experiment)
 
         gun.set_direction(pixelCentreX - sourcePositionX, pixelCentreY - sourcePositionY, pixelCentreZ - sourcePositionZ)
         #gun.set_direction(pixelCentreX - sourcePositionX +3*(2*self.rand()-1), pixelCentreY - sourcePositionY+3*(2*self.rand()-1), pixelCentreZ - sourcePositionZ+3*(2*self.rand()-1))

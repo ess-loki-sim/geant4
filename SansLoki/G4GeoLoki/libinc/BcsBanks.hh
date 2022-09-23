@@ -25,6 +25,8 @@ public:
 
   static double detectorSystemFrontDistanceFromBankFront(const int bankId);
 
+  static double getLarmor2022ExperimentBankPositionY();
+
   static bool isVertical(const int bankId);
   static bool areTubesInverselyNumbered(const int bankId);
 

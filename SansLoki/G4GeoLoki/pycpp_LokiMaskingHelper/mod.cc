@@ -5,9 +5,7 @@ PYTHON_MODULE
 {
   py::class_<MaskingHelper>("MaskingHelper", py::init<double>())
     .def(py::init<double, int>())
-    .def("calcPixelCentrePositionForMasking",&MaskingHelper::calcPixelCentrePositionForMasking)
-    .def("getPixelCentrePosition",&MaskingHelper::getPixelCentrePosition)
-
+    .def("getPixelCentrePositionsForMasking",&MaskingHelper::getPixelCentrePositionsForMasking)
     .def("getTotalNumberOfPixels",&MaskingHelper::getTotalNumberOfPixels).staticmethod("getTotalNumberOfPixels")
     ;
 }

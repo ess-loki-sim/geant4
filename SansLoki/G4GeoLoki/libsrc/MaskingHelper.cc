@@ -6,18 +6,11 @@
 #include <cassert>
 
 //////// Utilities for getting the centre coordinates of a pixel ////////
-double MaskingHelper::pixelCentrePosition[3] = { 0.0, 0.0, 0.0 };
-
-double MaskingHelper::getPixelCentrePosition(const int axisIndex) const{
-  assert(0 <= axisIndex && axisIndex <= 2);
-  return pixelCentrePosition[axisIndex];
-}
-
-void MaskingHelper::calcPixelCentrePositionForMasking(const int pixelId, const bool isNewPixelNumbering) { 
+py::object MaskingHelper::getPixelCentrePositionsForMasking(const int pixelId, const bool isOldPixelNumbering = false, const bool isLarmor2022Experiment = false) { 
   const int bankId = getBankId(pixelId);
   const int tubeId = getTubeId(pixelId, bankId);
-  const int inPackTubeId = getInPackTubeId(bankId, tubeId, isNewPixelNumbering);
-  const int packId = getPackId(bankId, tubeId, isNewPixelNumbering);
+  const int inPackTubeId = getInPackTubeId(bankId, tubeId, isOldPixelNumbering);
+  const int packId = getPackId(bankId, tubeId, isOldPixelNumbering);
   const int strawId = getStrawId(pixelId, bankId, tubeId);
 
   ///////// pixel in straw /////////
@@ -49,15 +42,10 @@ void MaskingHelper::calcPixelCentrePositionForMasking(const int pixelId, const b
   coordinateRotation(positionZ, positionX, -getBankRotation(bankId, 1));
   // place bank in world 
   positionX += getBankPosition(bankId, 0);
-  positionY += getBankPosition(bankId, 1);
+  positionY += !isLarmor2022Experiment ? getBankPosition(bankId, 1) : getLarmor2022ExperimentBankPositionY();
   positionZ += getBankPosition(bankId, 2);
-  
-  ///////// END - set values /////////
-  pixelCentrePosition[0] = positionX;
-  pixelCentrePosition[1] = positionY;
-  pixelCentrePosition[2] = positionZ;
 
-  return;
+  return py::make_tuple(positionX, positionY, positionZ);
 }
 
 void MaskingHelper::coordinateRotation(double &x, double &y, const double angle) {
@@ -76,23 +64,23 @@ int MaskingHelper::getBankId(const int pixelId) {
   return 0; //this is an error case, could be handled properly
 }
 
-int MaskingHelper::getPackId(const int bankId, const int tubeId, const bool isNewPixelNumbering) {
+int MaskingHelper::getPackId(const int bankId, const int tubeId, const bool isOldPixelNumbering) {
   const int numberOfPacks = getNumberOfPacksByBankId(bankId);
-  const int normalPackId = isNewPixelNumbering ? 
-                           (int) (tubeId % (numberOfPacks * 2)) / 2 :
-                           (int) tubeId / 8;
+  const int normalPackId = isOldPixelNumbering ? 
+                           (int) tubeId / 8 :
+                           (int) (tubeId % (numberOfPacks * 2)) / 2;
   return !areTubesInverselyNumbered(bankId) ? normalPackId : ((numberOfPacks - 1) - normalPackId);
 }
 
-int MaskingHelper::getInPackTubeId(const int bankId, const int tubeId, const bool isNewPixelNumbering) {
+int MaskingHelper::getInPackTubeId(const int bankId, const int tubeId, const bool isOldPixelNumbering) {
   const int numberOfPacks = getNumberOfPacksByBankId(bankId);
   const int newTubeIdConvertedToOldId = ((tubeId % 2) * 4) + ((int) tubeId / (numberOfPacks * 2));
   
-  if(isNewPixelNumbering){
-    return areTubesInverselyNumbered(bankId) ? (newTubeIdConvertedToOldId + 4) % 8 : newTubeIdConvertedToOldId % 8;
+  if(isOldPixelNumbering){
+    return areTubesInverselyNumbered(bankId) ? (tubeId + 4) % 8 : tubeId % 8;
   }
   else{
-    return areTubesInverselyNumbered(bankId) ? (tubeId + 4) % 8 : tubeId % 8;
+    return areTubesInverselyNumbered(bankId) ? (newTubeIdConvertedToOldId + 4) % 8 : newTubeIdConvertedToOldId % 8;
   }
 }
 

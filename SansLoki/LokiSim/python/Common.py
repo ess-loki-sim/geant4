@@ -10,14 +10,23 @@ def launch(geo):
     launcher.addParameterBoolean('addgeantinoes',False)
     launcher.addParameterBoolean('det_only',False)
     launcher.addParameterBoolean('masking_only',False)
-    #launcher.addParameterDouble("sample_generator_distance_meters", 0.2)
-    launcher.addParameterDouble("sample_generator_distance_meters", 4.049) #For Larmor rear bank experiment
+    launcher.addParameterDouble("sample_generator_distance_meters", 0.2) #All MCPL_output components are positioned at 0.2 m distance from the sample
     launcher.addParameterString('mcplDirectory','')    
     launcher.addParameterDouble("x_offset_meters", 0.005) #5 mm offset for rear bank at Larmor experiment
-    
+    launcher.addParameterBoolean('gen_larmor_2022_experiment',False)
+    launcher.addParameterDouble('gen_rear_detector_distance_m', 5.0)
+
     launcher.addParameterInt("analysis_rear_bank_pixel_number", 0) # zero means using default pixel number 
     if(launcher.getParameterInt('analysis_rear_bank_pixel_number')):
       launcher.setUserData("analysis_rear_bank_pixel_number", str(launcher.getParameterInt('analysis_rear_bank_pixel_number')))
+
+    
+    rearDetectorDistance = launcher.getParameterDouble('gen_rear_detector_distance_m')
+    sampleGeneratorDistance = launcher.getParameterDouble('sample_generator_distance_meters') #translate z coordinates by McStas Sample-MCPL_output distance
+    larmor2022experiment = launcher.getParameterBoolean('gen_larmor_2022_experiment')
+    if larmor2022experiment: # Fixed values for larmor 2022 experiment
+      rearDetectorDistance = 4.099 
+      sampleGeneratorDistance = 4.049 #note: intentionally 4.049, not 4.099 
 
    #geometry:
     launcher.setGeo(geo)
@@ -26,11 +35,10 @@ def launch(geo):
     if launcher.getParameterString('event_gen')=='mcpl':
         import G4MCPLPlugins.MCPLGen as Gen
         gen = Gen.create()
-        #gen.input_file = 'testbcs.mcpl'
-        gen.input_file = launcher.getParameterString('mcplDirectory') + 'larmor_postsample.mcpl.gz'
-        #gen.input_file = launcher.getParameterString('mcplDirectory') + 'larmor_postsample_n5000.mcpl.gz'
-        gen.dz_meter = launcher.getParameterDouble('sample_generator_distance_meters') #translate z coordinates by McStas Sample-MCPL_output distance
+        #gen.input_file = 'testbcs.mcpl' # use input_file argument to set the full path to the file
+        gen.dz_meter = sampleGeneratorDistance
         gen.dx_meter = launcher.getParameterDouble('x_offset_meters')
+        gen.input_file = launcher.getParameterString('mcplDirectory') + 'larmor_postsample.mcpl.gz'
     elif launcher.getParameterString('event_gen')=='ascii':
         raise ValueError("event_gen=ascii is no longer supported. Please use mcpl input instead")
     elif launcher.getParameterString('event_gen')=='spheremodel':
@@ -44,11 +52,10 @@ def launch(geo):
         gen = Gen()
     elif launcher.getParameterString('event_gen')=='masking':
         from  LokiSim.MaskingSourceGen import MaskingSourceGen as Gen
-        #gen = Gen(geo.rear_detector_distance_m) #gets default value instead of user defined
-        gen = Gen()
+        gen = Gen(rearDetectorDistance, larmor2022experiment)
     elif launcher.getParameterString('event_gen')=='larmorCalibrationSlits':
         from  LokiSim.CalibSlitSourceGen import CalibrationSlitSourceGen as Gen
-        gen = Gen()
+        gen = Gen(rearDetectorDistance, larmor2022experiment)
     else:
         import G4StdGenerators.FlexGen as Gen
         gen = Gen.create()

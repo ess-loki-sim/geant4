@@ -45,13 +45,10 @@ PYTHON_MODULE { GeoConstructPyExport::exportGeo<GeoBCS>("GeoBCSBanks"); }
 GeoBCS::GeoBCS()
   : GeoConstructBase("G4GeoLoki/GeoBCSBanks"){
   // declare all parameters that can be used from the command line,
-  // define their type, pick a self-explanatory name and _unit
-  // give the default value, the last 2 ones are optional (min, max)
-
-  addParameterDouble("rear_detector_distance_m", 5.0, 4.0, 10.0);
+  addParameterDouble("rear_detector_distance_m", 5.0, 4.0, 10.0); // default, min, max
   addParameterBoolean("rear_detector_only", false);
   addParameterBoolean("with_beamstop", false);
-  addParameterBoolean("larmor_rear_bank_experiment", false);
+  addParameterBoolean("larmor_2022_experiment", false);
   addParameterBoolean("with_calibration_slits", false);
   
   addParameterBoolean("old_tube_numbering", false);
@@ -224,22 +221,6 @@ G4LogicalVolume *GeoBCS::createBankLV(int bankId){
           -bankSizeZHalf + detBankFrontDistance - 5*Units::cm, 0, 0,
           lv_bank, BLACK, -5, 0, new G4RotationMatrix());
   }
-
-/*
-  // Add Calibration slit mask to the Rear Bank volume for Larmor rear bank experiment calibration
-  const bool withCalibrationSlits = getParameterBoolean("with_calibration_slits");
-  if (bankId == 0 && withCalibrationSlits) {
-    const double detBankFrontDistance = banks->detectorSystemFrontDistanceFromBankFront(bankId);
-    
-    const double verticalBankPosition = 0.5 * banks->getBankSize(bankId, 1) - 1155 *Units::mm + (4+33) *Units::mm; // beam centre at 1155 mm above floor, including the 4 mm electrical isolation layer, that is 33 mm above the Larmor floor (due to the weels)
-    const double verticalPosition = - verticalBankPosition;
-
-    auto lv_calibrationMask = createCalibrationMaskLV();
-    place(lv_calibrationMask,
-          -bankSizeZHalf + detBankFrontDistance - 55*Units::mm, verticalPosition, 0, // 75mm in front of the first layer of tubes
-          lv_bank, BLACK, -5, 0, new G4RotationMatrix());
-  }*/
-
   return lv_bank;
  }
 
@@ -275,25 +256,22 @@ G4LogicalVolume *GeoBCS::createTriangularMaskLV(int maskId){
 
 G4VPhysicalVolume* GeoBCS::Construct(){
   // this is where we put the entire geometry together, the private functions creating the logical volumes are meant to facilitate the code below  
-
-  auto world_material = getParameterMaterial("world_material"); 
-  const double sdd = getParameterDouble("rear_detector_distance_m")*Units::m;
-
-  banks = new BcsBanks(sdd);
+  const double rear_detector_distance = getParameterDouble("rear_detector_distance_m")*Units::m;
+  banks = new BcsBanks(rear_detector_distance);
 
   // calculate a value that is big enough to fit your world volume, the "super mother"
-  double big_dimension = 1.1*( 1 *Units::m + sdd);
+  double big_dimension = 1.1*( 1 *Units::m + rear_detector_distance);
 
   //World volume:
+  auto world_material = getParameterMaterial("world_material");
   auto worldvols = place(new G4Box("World", big_dimension, big_dimension, big_dimension), world_material, 0, 0, 0, 0, INVISIBLE);
   auto lvWorld = worldvols.logvol;
   auto pvWorld = worldvols.physvol;
 
   // Create and place detector banks
-  bool rearBankOnly = getParameterBoolean("rear_detector_only");
-  const bool larmorRearBankExperiment = getParameterBoolean("larmor_rear_bank_experiment");
-  if(larmorRearBankExperiment) { rearBankOnly = true; }
-
+  const bool larmor2022experiment = getParameterBoolean("larmor_2022_experiment");
+  const bool withCalibrationSlits = getParameterBoolean("with_calibration_slits");
+  const bool rearBankOnly = getParameterBoolean("rear_detector_only"); 
   const int numberOfBanks = rearBankOnly ? 1 : 9;
   for (int bankId = 0; bankId < numberOfBanks; bankId++){
     auto lv_bank = createBankLV(bankId);
@@ -303,22 +281,15 @@ G4VPhysicalVolume* GeoBCS::Construct(){
     rotation->rotateX(banks->getBankRotation(bankId, 0));
     rotation->rotateZ(banks->getBankRotation(bankId, 2));
 
-    // only for rear bank experiment at Larmor
-    double verticalBankPosition = banks->getBankPosition(bankId, 1);
-    if(larmorRearBankExperiment){
-      std::cout<<"\n ***** \n original vertical position: " << verticalBankPosition;
-      verticalBankPosition = 0.5 * banks->getBankSize(bankId, 1) - 1155 *Units::mm + (4+33) *Units::mm; // beam centre at 1155 mm above floor, including the 4 mm electrical isolation layer, that is 33 mm above the Larmor floor (due to the weels) #EDITED 1159 mm->1155 mm
-      std::cout<<"\n new vertical position: " << verticalBankPosition << "\n ***** \n";
-    }
+    const double verticalBankPosition = !larmor2022experiment ? banks->getBankPosition(bankId, 1) : banks->getLarmor2022ExperimentBankPositionY();
 
     place(lv_bank, banks->getBankPosition(bankId, 0), verticalBankPosition, banks->getBankPosition(bankId, 2), lvWorld, ORANGE, bankId, 0, rotation);
 
     // Add Calibration slit masks
-    const bool withCalibrationSlits = getParameterBoolean("with_calibration_slits");
 
     if (withCalibrationSlits && bankId!=6 && bankId!=8 ) {
       std::string calibMaskName = "lokiStandard-"+std::to_string(bankId);
-      if (larmorRearBankExperiment) { calibMaskName = "larmorCdCalibMask"; }
+      if (larmor2022experiment) { calibMaskName = "larmorCdCalibMask"; }
       const auto calibMask = CalibMasks::getCalibMask(calibMaskName);
       auto lv_calibrationMask = createCalibrationMaskLV(calibMask);
       
@@ -328,8 +299,6 @@ G4VPhysicalVolume* GeoBCS::Construct(){
       }
   }
 
-  
-   
   // Add 4 triangular boron masks (added to the World instead of the banks)
   if (!rearBankOnly) {
     for (int maskId = 0; maskId <= 3; maskId++) {
@@ -353,8 +322,21 @@ G4VPhysicalVolume* GeoBCS::Construct(){
 
 
 bool GeoBCS::validateParameters() {
-// you can apply conditions to control the sanity of the geometry parameters and warn the user of possible mistakes
+  // you can apply conditions to control the sanity of the geometry parameters and warn the user of possible mistakes
   // a nice example: Projects/SingleCell/G4GeoSingleCell/libsrc/GeoB10SingleCell.cc
-    return true;  
+  bool rearBankOnly = getParameterBoolean("rear_detector_only"); 
+  double rear_detector_distance = getParameterDouble("rear_detector_distance_m")*Units::m;
+  const bool larmor2022experiment = getParameterBoolean("larmor_2022_experiment");
+  if(larmor2022experiment) { 
+    if (rearBankOnly == false) {
+      printf("ERROR: Wrong rear_detector_only value for the larmor_2022_experiment! (It should be true)\n");
+      return false;
+    }
+    if (rear_detector_distance != 4.099 *Units::m) {
+      printf("ERROR: Wrong rear_detector_distance_m value for the larmor_2022_experiment! (It should be 4.099)\n");
+      return false;
+    }
+  }
+  return true;
 }
 

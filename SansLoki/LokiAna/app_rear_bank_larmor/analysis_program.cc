@@ -28,9 +28,14 @@ int main(int argc, char**argv) {
 
   auto setup = dr.setup();
   auto &geo = setup->geo();
-  //printf("QQQ=============  %s \n", geo.getName().c_str());
+  
   if (geo.getName()!="G4GeoLoki/GeoBCSBanks" && geo.getName()!="G4GeoBCS/GeoLarmorBCSExperiment") {
     printf("Error: Wrong setup for this analysis\n");
+    return 1;
+  }
+  const double sampleDetectorDistance = setup->geo().getParameterDouble("rear_detector_distance_m") *Units::m;
+  if (sampleDetectorDistance != 4.099*Units::m) {
+    printf("Error: rear_detector_distance_m is not correct for the Larmor 2022 experiment!\n");
     return 1;
   }
 
@@ -65,7 +70,6 @@ int main(int argc, char**argv) {
 
   auto userData = setup->userData();
   PixelatedBanks* banks;
-  const double sampleDetectorDistance = setup->geo().getParameterDouble("rear_detector_distance_m") *Units::m;
   if(userData.count("analysis_rear_bank_pixel_number")){
     const int rearBankPixelNumber = std::stoi(userData["analysis_rear_bank_pixel_number"].c_str());
     banks = new PixelatedBanks(sampleDetectorDistance, rearBankPixelNumber);
