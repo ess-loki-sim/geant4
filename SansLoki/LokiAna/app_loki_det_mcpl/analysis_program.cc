@@ -59,9 +59,9 @@ int main(int argc, char**argv) {
   auto userData = setup->userData();
   PixelatedBanks* banks;
   const double sampleDetectorDistance = setup->geo().getParameterDouble("rear_detector_distance_m") *Units::m;
-  if(userData.count("analysis_rear_bank_pixel_number")){
-    const int rearBankPixelNumber = std::stoi(userData["analysis_rear_bank_pixel_number"].c_str());
-    banks = new PixelatedBanks(sampleDetectorDistance, rearBankPixelNumber);
+  if(userData.count("analysis_straw_pixel_number")){
+    const int strawPixelNumber = std::stoi(userData["analysis_straw_pixel_number"].c_str());
+    banks = new PixelatedBanks(sampleDetectorDistance, strawPixelNumber);
   }
   else{ // use default rear bank pixel number
     banks = new PixelatedBanks(sampleDetectorDistance);

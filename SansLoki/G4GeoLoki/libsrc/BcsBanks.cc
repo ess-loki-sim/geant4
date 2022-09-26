@@ -6,6 +6,12 @@
 #include <array>
 #include <cassert>
 
+BcsBanks::BcsBanks(double rearBankDistance, int numberOfBanks)
+  : m_rearBankDistance(rearBankDistance), 
+    m_numberOfBanks(numberOfBanks)
+{
+}
+
 const double BcsBanks::packHolderDistanceFromPackTop = 7.6 *Units::mm;
 const double BcsBanks::packHolderDistanceFromPackFront = 7.5 *Units::mm;
 
@@ -291,6 +297,10 @@ bool BcsBanks::isVertical(const int bankId) {
 bool BcsBanks::areTubesInverselyNumbered(const int bankId) {
   assert(0 <= bankId && bankId <= 8);
   return (bankId == 1 || bankId == 2 || bankId == 5 || bankId == 6);
+}
+
+int BcsBanks::getNumberOfBanks() const {
+  return m_numberOfBanks;
 }
 
 double BcsBanks::getLarmor2022ExperimentBankPositionY() {

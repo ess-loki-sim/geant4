@@ -15,7 +15,7 @@ class CalibrationSlitSourceGen(G4CustomPyGen.GenBase):
         self.addParameterDouble("x_offset_millimeters", 0.0)
         self.addParameterDouble("x_width_meters", 0.0)
         self.addParameterDouble("y_width_meters", 0.0)
-        self.addParameterInt("aiming_rear_bank_pixel_number", 512) #used only for aiming, NOT for analysis
+        self.addParameterInt("aiming_straw_pixel_number", 512) #used only for aiming, NOT for analysis
         #self.addParameterDouble("z_width_meters", 0.001)
         self.addParameterBoolean("aiming_old_tube_numbering", False)
         self.addParameterBoolean("aiming_larmor_2022_experiment", False)
@@ -33,7 +33,7 @@ class CalibrationSlitSourceGen(G4CustomPyGen.GenBase):
         ##self.aimHelper = Mask.bcsBanks(self.rear_detector_distance_m *Units.m) #doesn't work
         #self.aimHelper = Mask.bcsBanks(4.420 *Units.m)
         #self.aimHelper = Mask.bcsBanks(4.068 *Units.m)
-        self.aimHelper = Mask.MaskingHelper(self.rearDetectorDistance *Units.m, self.aiming_rear_bank_pixel_number)
+        self.aimHelper = Mask.MaskingHelper(self.rearDetectorDistance *Units.m, self.aiming_straw_pixel_number)
         self.totalNumberOfPixels = self.aimHelper.getTotalNumberOfPixels()
 
     def generate_event(self,gun):

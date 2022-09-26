@@ -5,15 +5,13 @@
 
 class PixelatedBanks : public BcsBanks{
 public:
-  PixelatedBanks(double rearBankDistance): BcsBanks(rearBankDistance){} //use default rearBankPixelNumber
-  PixelatedBanks(double rearBankDistance, int rearBankPixelNumber): BcsBanks(rearBankDistance){
-    numberOfPixelsInStraw[0] = rearBankPixelNumber;
-  }
+  PixelatedBanks(double rearBankDistance);
+  PixelatedBanks(double rearBankDistance, int strawPixelNumber);
+  PixelatedBanks(double rearBankDistance, int strawPixelNumber, int numberOfBanks);
 
-  static int getTotalNumberOfPixels();
-  static int getNumberOfPixels(const int bankId);
+  int getTotalNumberOfPixels();
   int getPixelId(const int bankId, const int tubeId, const int strawId, const double positionX, const double positionY) const;
-
+  static int getNumberOfPixels(const int bankId);
   static int getNumberOfPixelsInStraw(const int bankId);
 
 protected:  

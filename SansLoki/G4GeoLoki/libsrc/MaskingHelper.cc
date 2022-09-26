@@ -6,7 +6,7 @@
 #include <cassert>
 
 //////// Utilities for getting the centre coordinates of a pixel ////////
-py::object MaskingHelper::getPixelCentrePositionsForMasking(const int pixelId, const bool isOldPixelNumbering = false, const bool isLarmor2022Experiment = false) { 
+py::object MaskingHelper::getPixelCentrePositionsForMasking(const int pixelId, const bool isOldPixelNumbering = false, const bool isLarmor2022Experiment = false) const { 
   const int bankId = getBankId(pixelId);
   const int tubeId = getTubeId(pixelId, bankId);
   const int inPackTubeId = getInPackTubeId(bankId, tubeId, isOldPixelNumbering);
@@ -55,13 +55,13 @@ void MaskingHelper::coordinateRotation(double &x, double &y, const double angle)
   y = tempY;
 }
 
-int MaskingHelper::getBankId(const int pixelId) {
-  for (int bankId = 0; bankId < 9; bankId++){
+int MaskingHelper::getBankId(const int pixelId) const {
+  for (int bankId = 0; bankId < getNumberOfBanks(); bankId++){
     if(pixelId < getBankPixelOffset(bankId+1)){
       return bankId;
     }
   }
-  return 0; //this is an error case, could be handled properly
+  throw std::runtime_error("Pixel id is out of the range for the banks in the geometry"); 
 }
 
 int MaskingHelper::getPackId(const int bankId, const int tubeId, const bool isOldPixelNumbering) {

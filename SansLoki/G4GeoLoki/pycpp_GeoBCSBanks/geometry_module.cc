@@ -257,7 +257,10 @@ G4LogicalVolume *GeoBCS::createTriangularMaskLV(int maskId){
 G4VPhysicalVolume* GeoBCS::Construct(){
   // this is where we put the entire geometry together, the private functions creating the logical volumes are meant to facilitate the code below  
   const double rear_detector_distance = getParameterDouble("rear_detector_distance_m")*Units::m;
-  banks = new BcsBanks(rear_detector_distance);
+  const bool larmor2022experiment = getParameterBoolean("larmor_2022_experiment");
+  const bool rearBankOnly = getParameterBoolean("rear_detector_only"); 
+  const int numberOfBanks = rearBankOnly ? 1 : 9;
+  banks = new BcsBanks(rear_detector_distance, numberOfBanks);
 
   // calculate a value that is big enough to fit your world volume, the "super mother"
   double big_dimension = 1.1*( 1 *Units::m + rear_detector_distance);
@@ -269,11 +272,8 @@ G4VPhysicalVolume* GeoBCS::Construct(){
   auto pvWorld = worldvols.physvol;
 
   // Create and place detector banks
-  const bool larmor2022experiment = getParameterBoolean("larmor_2022_experiment");
-  const bool withCalibrationSlits = getParameterBoolean("with_calibration_slits");
-  const bool rearBankOnly = getParameterBoolean("rear_detector_only"); 
-  const int numberOfBanks = rearBankOnly ? 1 : 9;
-  for (int bankId = 0; bankId < numberOfBanks; bankId++){
+  
+  for (int bankId = 0; bankId < banks->getNumberOfBanks(); bankId++){
     auto lv_bank = createBankLV(bankId);
 
     auto rotation = new G4RotationMatrix();
@@ -286,7 +286,7 @@ G4VPhysicalVolume* GeoBCS::Construct(){
     place(lv_bank, banks->getBankPosition(bankId, 0), verticalBankPosition, banks->getBankPosition(bankId, 2), lvWorld, ORANGE, bankId, 0, rotation);
 
     // Add Calibration slit masks
-
+    const bool withCalibrationSlits = getParameterBoolean("with_calibration_slits");
     if (withCalibrationSlits && bankId!=6 && bankId!=8 ) {
       std::string calibMaskName = "lokiStandard-"+std::to_string(bankId);
       if (larmor2022experiment) { calibMaskName = "larmorCdCalibMask"; }

@@ -9,7 +9,7 @@
 
 class BcsBanks {
 public:
-  BcsBanks(double rearBankDistance): m_rearBankDistance(rearBankDistance){}
+  BcsBanks(double rearBankDistance, int numberOfBanks = 9);
   /// banks ///
   static double getPackRotation();
   static double getPackPackDistance();// TODO better name?
@@ -30,6 +30,7 @@ public:
   static bool isVertical(const int bankId);
   static bool areTubesInverselyNumbered(const int bankId);
 
+  int getNumberOfBanks() const;
   /// boron masks ///
   static double getBoronMaskPosition(const int bankId, const int maskId, const int axisIndex);
   static double getTriangularBoronMaskPosition(const int maskId, const int axisIndex);
@@ -38,7 +39,8 @@ public:
   double getCalibMaskPosition(CalibMasks::CalibMasksBase calibMask,const int bankId, const int axisIndex) const;
 
 private:
-  double m_rearBankDistance;
+  const double m_rearBankDistance;
+  const int m_numberOfBanks;
 
   const static double packHolderDistanceFromPackTop;
   const static double packHolderDistanceFromPackFront;

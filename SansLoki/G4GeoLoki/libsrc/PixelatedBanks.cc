@@ -5,6 +5,25 @@
 #include <array>
 #include <cassert>
 
+PixelatedBanks::PixelatedBanks(double rearBankDistance)
+  : BcsBanks(rearBankDistance) 
+{
+}
+PixelatedBanks::PixelatedBanks(double rearBankDistance, int strawPixelNumber)
+  : BcsBanks(rearBankDistance)
+{
+  for(int i=0; i<getNumberOfBanks(); i++) {
+    numberOfPixelsInStraw[i] = strawPixelNumber;
+  }
+}
+PixelatedBanks::PixelatedBanks(double rearBankDistance, int strawPixelNumber, int numberOfBanks)
+  : BcsBanks(rearBankDistance, numberOfBanks)
+{
+  for(int i=0; i<getNumberOfBanks(); i++) {
+    numberOfPixelsInStraw[i] = strawPixelNumber;
+  }
+}
+
 int PixelatedBanks::numberOfPixelsInStraw[9] = { // number of pixels along the straws
     //16384, // 0 - rear (used for CalibSlitSourceGen) 
     256, // 0 - rear
@@ -28,7 +47,7 @@ int PixelatedBanks::getNumberOfPixels(const int bankId) {
 }
 
 int PixelatedBanks::getTotalNumberOfPixels() {
-  return getBankPixelOffset(9);
+  return getBankPixelOffset(getNumberOfBanks());
 }
 
 int PixelatedBanks::getBankPixelOffset(const int bankId) {

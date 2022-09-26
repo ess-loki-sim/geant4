@@ -16,9 +16,9 @@ def launch(geo):
     launcher.addParameterBoolean('gen_larmor_2022_experiment',False)
     launcher.addParameterDouble('gen_rear_detector_distance_m', 5.0)
 
-    launcher.addParameterInt("analysis_rear_bank_pixel_number", 0) # zero means using default pixel number 
-    if(launcher.getParameterInt('analysis_rear_bank_pixel_number')):
-      launcher.setUserData("analysis_rear_bank_pixel_number", str(launcher.getParameterInt('analysis_rear_bank_pixel_number')))
+    launcher.addParameterInt("analysis_straw_pixel_number", 0) # zero means using default pixel number 
+    if(launcher.getParameterInt('analysis_straw_pixel_number')):
+      launcher.setUserData("analysis_straw_pixel_number", str(launcher.getParameterInt('analysis_straw_pixel_number')))
 
     
     rearDetectorDistance = launcher.getParameterDouble('gen_rear_detector_distance_m')
