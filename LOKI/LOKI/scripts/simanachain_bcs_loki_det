@@ -1,3 +1,0 @@
-#!/usr/bin/env python3
-import G4Utils.chain
-G4Utils.chain.chain('ess_loki_bcsbanks_sim_det','ess_loki_loki_det_mcpl','REDUCED')
