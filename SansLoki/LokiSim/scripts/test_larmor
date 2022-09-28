@@ -1,9 +1,0 @@
-#!/bin/bash
-
-ess_lokisim_larmor_sim -t -lESS_Empty && \
-ess_lokisim_larmor_sim -lESS_Empty |grep '^G4Launcher::Launcher'
-if [ ${PIPESTATUS[0]} == 0 ]; then
-    ess_lokiana_larmor_ana larmor.griff
-else
-    exit 1
-fi

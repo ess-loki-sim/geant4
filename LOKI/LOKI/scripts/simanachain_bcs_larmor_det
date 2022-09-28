@@ -1,0 +1,4 @@
+#!/usr/bin/env python3
+import G4Utils.chain
+G4Utils.chain.chain('ess_loki_larmor_sim','ess_loki_larmor_det_mcpl','REDUCED')
+

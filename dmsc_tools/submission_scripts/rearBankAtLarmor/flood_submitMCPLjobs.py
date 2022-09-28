@@ -21,7 +21,7 @@ queue='newlong'
 #queue='short'
 #queue='quark'
 
-cmdbase = [ 'ess_lokisim_simanachain_rear_bank_larmor'
+cmdbase = [ 'ess_loki_simanachain_rear_bank_larmor'
             ,'results'
             ,'rear_detector_distance_m=4.099'
             ,'straw_pixel_number=512'
