@@ -12,21 +12,11 @@ def launch(geo):
     launcher.addParameterBoolean('masking_only',False)
     launcher.addParameterDouble("sample_generator_distance_meters", 0.2) #All MCPL_output components are positioned at 0.2 m distance from the sample
     launcher.addParameterString('mcplDirectory','')    
-    launcher.addParameterDouble("x_offset_meters", 0.005) #5 mm offset for rear bank at Larmor experiment
-    launcher.addParameterBoolean('gen_larmor_2022_experiment',False)
-    launcher.addParameterDouble('gen_rear_detector_distance_m', 5.0)
+    launcher.addParameterDouble("gen_x_offset_meters", 0.005) #5 mm offset for rear bank at Larmor experiment
 
     launcher.addParameterInt("analysis_straw_pixel_number", 0) # zero means using default pixel number 
     if(launcher.getParameterInt('analysis_straw_pixel_number')):
       launcher.setUserData("analysis_straw_pixel_number", str(launcher.getParameterInt('analysis_straw_pixel_number')))
-
-    
-    rearDetectorDistance = launcher.getParameterDouble('gen_rear_detector_distance_m')
-    sampleGeneratorDistance = launcher.getParameterDouble('sample_generator_distance_meters') #translate z coordinates by McStas Sample-MCPL_output distance
-    larmor2022experiment = launcher.getParameterBoolean('gen_larmor_2022_experiment')
-    if larmor2022experiment: # Fixed values for larmor 2022 experiment
-      rearDetectorDistance = 4.099 
-      sampleGeneratorDistance = 4.049 #note: intentionally 4.049, not 4.099 
 
    #geometry:
     launcher.setGeo(geo)
@@ -36,9 +26,17 @@ def launch(geo):
         import G4MCPLPlugins.MCPLGen as Gen
         gen = Gen.create()
         #gen.input_file = 'testbcs.mcpl' # use input_file argument to set the full path to the file
-        gen.dz_meter = sampleGeneratorDistance
-        gen.dx_meter = launcher.getParameterDouble('x_offset_meters')
+        gen.dz_meter = launcher.getParameterDouble('sample_generator_distance_meters') #translate z coordinates by McStas Sample-MCPL_output distance
+        gen.dx_meter = launcher.getParameterDouble('gen_x_offset_meters')
         gen.input_file = launcher.getParameterString('mcplDirectory') + 'larmor_postsample.mcpl.gz'
+
+        gen.exposeParameter("larmor_2022_experiment",geo,"geo_larmor_2022_experiment")
+        def overrideGenDzForLarmor2022Experiment(): # Fixed gen dz value for larmor2022experiment
+          larmor_2022_experiment = launcher.getGen().getParameterBoolean('geo_larmor_2022_experiment')
+          if larmor_2022_experiment:
+            launcher.getGen().dz_meter = 4.049 #note: intentionally 4.049, not 4.099
+            print("Generator dz overriden for Larmor2022 experiment setup. New value is 4.099 m.") 
+        launcher.addPrePreInitHook(overrideGenDzForLarmor2022Experiment) #(possibly) override gen dz after the geo.larmor_2022_experiment input parameter's value is available
     elif launcher.getParameterString('event_gen')=='ascii':
         raise ValueError("event_gen=ascii is no longer supported. Please use mcpl input instead")
     elif launcher.getParameterString('event_gen')=='spheremodel':
@@ -52,10 +50,18 @@ def launch(geo):
         gen = Gen()
     elif launcher.getParameterString('event_gen')=='masking':
         from  LOKI.MaskingSourceGen import MaskingSourceGen as Gen
-        gen = Gen(rearDetectorDistance, larmor2022experiment)
+        gen = Gen()
+        # gen.exposeParameters(geo,"geo_")
+        gen.exposeParameter("rear_detector_distance_m",geo,"geo_rear_detector_distance_m")
+        gen.exposeParameter("larmor_2022_experiment",geo,"geo_larmor_2022_experiment")
+        gen.exposeParameter("old_tube_numbering",geo,"geo_old_tube_numbering")
     elif launcher.getParameterString('event_gen')=='larmorCalibrationSlits':
         from  LOKI.CalibSlitSourceGen import CalibrationSlitSourceGen as Gen
-        gen = Gen(rearDetectorDistance, larmor2022experiment)
+        gen = Gen()
+        # gen.exposeParameters(geo,"geo_")
+        gen.exposeParameter("rear_detector_distance_m",geo,"geo_rear_detector_distance_m")
+        gen.exposeParameter("larmor_2022_experiment",geo,"geo_larmor_2022_experiment")
+        gen.exposeParameter("old_tube_numbering",geo,"geo_old_tube_numbering")
     else:
         import G4StdGenerators.FlexGen as Gen
         gen = Gen.create()

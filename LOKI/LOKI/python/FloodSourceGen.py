@@ -12,10 +12,10 @@ class FloodSourceGen(G4CustomPyGen.GenBase):
         self.addParameterDouble("source_sample_distance_meters", 25.61)
         self.addParameterDouble("source_monitor_distance_meters", 25.57)
 
-        #self.addParameterDouble("x_offset_meters", -0.040)
-        self.addParameterDouble("x_offset_meters", 0.005)
-        self.addParameterDouble("x_width_meters", 0.006)
-        self.addParameterDouble("y_width_meters", 0.008)
+        #self.addParameterDouble("gen_x_offset_meters", -0.040)
+        self.addParameterDouble("gen_x_offset_meters", 0.005)
+        self.addParameterDouble("gen_x_width_meters", 0.006)
+        self.addParameterDouble("gen_y_width_meters", 0.008)
         #self.addParameterDouble("z_width_meters", 0.001)
         self.addParameterDouble("fixed_z_meters", 0.000)
 
@@ -40,8 +40,6 @@ class FloodSourceGen(G4CustomPyGen.GenBase):
         print("monitor TOF min: " + str(self.source_monitor_distance_meters / velocity_max *Units.second))
         print("monitor TOF max: " + str(self.source_monitor_distance_meters / velocity_min *Units.second))
 
-
-
     def generate_event(self,gun):
         # Energy - uniform wavelength distribution between min and max parameters
         wavelength = (self.neutron_wavelength_min_aangstrom + self.rand()*(self.neutron_wavelength_max_aangstrom - self.neutron_wavelength_min_aangstrom))
@@ -52,9 +50,9 @@ class FloodSourceGen(G4CustomPyGen.GenBase):
         gun.set_time(self.source_sample_distance_meters / velocity *Units.second)
 
         # Source position - uniform surface source (could be volume)
-        x_meters = -(self.x_width_meters * 0.5) + self.rand() * self.x_width_meters + self.x_offset_meters
-        y_meters = -(self.y_width_meters * 0.5) + self.rand() * self.y_width_meters
-        gun.set_position(x_meters*Units.m, y_meters*Units.m , self.fixed_z_meters*Units.m)
+        x_meters = self.gen_x_width_meters *(self.rand()-0.5) + self.gen_x_offset_meters
+        y_meters = self.gen_y_width_meters *(self.rand()-0.5)
+        gun.set_position(x_meters *Units.m, y_meters *Units.m , self.fixed_z_meters *Units.m)
 
         # Direction - uniform within a cone with an opening angle of alpha
         cos_alpha = math.cos( self.cone_opening_deg*math.pi/180 )
