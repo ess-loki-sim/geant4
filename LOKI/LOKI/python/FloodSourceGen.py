@@ -21,19 +21,23 @@ class FloodSourceGen(G4CustomPyGen.GenBase):
 
         #self.addParameterDouble("cone_opening_deg", math.acos(1-2/120)/math.pi*180, 0.0, 180.0) #for more efficient sampling - Larmor
         #self.addParameterDouble("cone_opening_deg", math.acos(1-2/375)/math.pi*180, 0.0, 180.0) #for more efficient sampling - LoKI rear bank at Larmor
-        self.addParameterDouble("cone_opening_deg", math.acos(1-2/233)/math.pi*180, 0.0, 180.0) #for more efficient sampling - LoKI rear bank at Larmor
+        # self.addParameterDouble("cone_opening_deg", math.acos(1-2/233)/math.pi*180, 0.0, 180.0) #for more efficient sampling - LoKI rear bank at Larmor
         
-        #self.addParameterDouble("cone_opening_deg", 90, 0.0, 180.0) #for more efficient sampling
+        self.addParameterDouble("cone_opening_deg", 90, 0.0, 180.0) #for more efficient sampling
 
     def init_generator(self,gun):
         gun.set_type('neutron')
         #gun.set_type('geantino')
 
-        solid_angle_factor = (1 - math.cos(self.cone_opening_deg*math.pi/180))/2
+        self.coneOpeningDeg = self.cone_opening_deg
+        if self.geo_larmor_2022_experiment:
+          self.coneOpeningDeg = math.acos(1-2/233)/math.pi*180
+
+        solid_angle_factor = (1 - math.cos(self.coneOpeningDeg*math.pi/180))/2
         print("Source factor: " + str(1/solid_angle_factor))
-        #print(math.acos(1-2/120)/math.pi*180, self.cone_opening_deg, self.cone_opening_deg*math.pi/180)
-        #print(math.acos(1-2/375)/math.pi*180, self.cone_opening_deg, self.cone_opening_deg*math.pi/180)
-        print(math.acos(1-2/23)/math.pi*180, self.cone_opening_deg, self.cone_opening_deg*math.pi/180)
+        #print(math.acos(1-2/120)/math.pi*180, self.coneOpeningDeg, self.coneOpeningDeg*math.pi/180)
+        #print(math.acos(1-2/375)/math.pi*180, self.coneOpeningDeg, self.coneOpeningDeg*math.pi/180)
+        print(math.acos(1-2/23)/math.pi*180, self.coneOpeningDeg, self.coneOpeningDeg*math.pi/180)
 
         velocity_min = Utils.NeutronMath.neutron_angstrom_to_meters_per_second(13)
         velocity_max = Utils.NeutronMath.neutron_angstrom_to_meters_per_second(2)
@@ -55,7 +59,7 @@ class FloodSourceGen(G4CustomPyGen.GenBase):
         gun.set_position(x_meters *Units.m, y_meters *Units.m , self.fixed_z_meters *Units.m)
 
         # Direction - uniform within a cone with an opening angle of alpha
-        cos_alpha = math.cos( self.cone_opening_deg*math.pi/180 )
+        cos_alpha = math.cos(self.coneOpeningDeg*math.pi/180)
         rho = cos_alpha + self.rand() * (1 - cos_alpha) # rand uniform [cos(alpha), 1]
         theta = math.acos(rho)
         phi = self.rand() * 2.0 * math.pi

@@ -48,15 +48,9 @@ def launch(geo):
     elif launcher.getParameterString('event_gen')=='flood':
         from  LOKI.FloodSourceGen import FloodSourceGen as Gen
         gen = Gen()
+        gen.exposeParameter("larmor_2022_experiment",geo,"geo_larmor_2022_experiment")
     elif launcher.getParameterString('event_gen')=='masking':
         from  LOKI.MaskingSourceGen import MaskingSourceGen as Gen
-        gen = Gen()
-        # gen.exposeParameters(geo,"geo_")
-        gen.exposeParameter("rear_detector_distance_m",geo,"geo_rear_detector_distance_m")
-        gen.exposeParameter("larmor_2022_experiment",geo,"geo_larmor_2022_experiment")
-        gen.exposeParameter("old_tube_numbering",geo,"geo_old_tube_numbering")
-    elif launcher.getParameterString('event_gen')=='larmorCalibrationSlits':
-        from  LOKI.CalibSlitSourceGen import CalibrationSlitSourceGen as Gen
         gen = Gen()
         # gen.exposeParameters(geo,"geo_")
         gen.exposeParameter("rear_detector_distance_m",geo,"geo_rear_detector_distance_m")

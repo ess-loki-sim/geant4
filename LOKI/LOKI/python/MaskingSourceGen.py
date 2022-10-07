@@ -17,13 +17,9 @@ class MaskingSourceGen(G4CustomPyGen.GenBase):
     def init_generator(self,gun):
         gun.set_type('geantino') #neutron
 
-        self._i = self.getParameterInt('aiming_pixel_id_min') -1 #count events to shoot neutrons at each pixel
+        self._i = self.aiming_pixel_id_min -1 #count events to shoot neutrons at each pixel
 
-        self.larmor2022experiment = self.getParameterBoolean('geo_larmor_2022_experiment')
-        self.old_tube_numbering = self.getParameterBoolean('geo_old_tube_numbering')
-
-        rearDetectorDistance = self.getParameterDouble('geo_rear_detector_distance_m') *Units.m
-        self.aimHelper = Mask.MaskingHelper(rearDetectorDistance , self.aiming_straw_pixel_number)
+        self.aimHelper = Mask.MaskingHelper(self.geo_rear_detector_distance_m *Units.m, self.aiming_straw_pixel_number)
         self.totalNumberOfPixels = self.aimHelper.getTotalNumberOfPixels()
 
     def generate_event(self,gun):
@@ -38,7 +34,7 @@ class MaskingSourceGen(G4CustomPyGen.GenBase):
         #bank pixel limits: 0, 401408, 516096, 602112, 716800, 802816, 1003520, 1232896, 1376256, 1605632
         pixelId = ((self._i + 0) % self.totalNumberOfPixels) 
         
-        pixelCentreX, pixelCentreY, pixelCentreZ = self.aimHelper.getPixelCentrePositionsForMasking(pixelId, self.old_tube_numbering, self.larmor2022experiment)
+        pixelCentreX, pixelCentreY, pixelCentreZ = self.aimHelper.getPixelCentrePositionsForMasking(pixelId, self.geo_old_tube_numbering, self.geo_larmor_2022_experiment)
 
         gun.set_direction(pixelCentreX - sourcePositionX, pixelCentreY - sourcePositionY, pixelCentreZ - sourcePositionZ)
         #gun.set_direction(pixelCentreX - sourcePositionX +3*(2*self.rand()-1), pixelCentreY - sourcePositionY+3*(2*self.rand()-1), pixelCentreZ - sourcePositionZ+3*(2*self.rand()-1))
