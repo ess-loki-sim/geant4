@@ -88,6 +88,11 @@ int main(int argc, char**argv) {
     banks = new PixelatedBanks(sampleDetectorDistance);
   }
 
+  bool oldTubeNumbering = false;
+  if (!geo.hasParameterBoolean("old_tube_numbering") || geo.getParameterBoolean("old_tube_numbering")) {
+    oldTubeNumbering = true;
+  }
+
   const double tubeRadius = BcsTube::getTubeOuterRadius(); //12.7; 
 
   //float xmin = -53;
@@ -291,7 +296,8 @@ int main(int argc, char**argv) {
       while (auto tubeWallSegment = segments_TubeWall.next()) { // loop over all segments of the TubeWall
 
         bankNumber = (int)tubeWallSegment->volumeCopyNumber(2);
-        panelNumber = (int)tubeWallSegment->volumeCopyNumber() % 4;
+        const int tubeId = (int)tubeWallSegment->volumeCopyNumber();
+        panelNumber = banks->getTubeLayerId(bankNumber, tubeId, oldTubeNumbering);
         neutron_weight = tubeWallSegment->getTrack()->weight();
 
 
@@ -356,7 +362,7 @@ int main(int argc, char**argv) {
 
         h_neutron_xy_conv->fill(-position_conv[0]/Units::mm, position_conv[1]/Units::mm, neutron->weight());
 
-        const int panelNumber_conv = tubeId_conv % 4;
+        const int panelNumber_conv = banks->getTubeLayerId(bankId_conv, tubeId_conv, oldTubeNumbering);
         h_neutron_bankPanelConvCounter->fill(bankId_conv, panelNumber_conv, neutron->weight());
         h_neutron_panelConvCounter->fill(panelNumber_conv, neutron->weight());
 
