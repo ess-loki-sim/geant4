@@ -62,6 +62,7 @@ parser.add_argument('-odl', '--overlayDetectionLambda', action = 'store_true', h
 
 parser.add_argument('-eow', '--efficiencyOverWavelength', action = 'store_true', help = 'Plot efficiency(wavelength). Incident neutron number per wavelength bin can be provided in a csv file if the incident beam was not histogrammed (used for the larmor2022experiment). The csv file can be created using the binMCPLNeutronWavelength script. (Turn it into a neutron number plot using -nn)')
 parser.add_argument('-fncsv', '--fileNameCsv',nargs = '*', help = 'Csv input file name(s)')
+parser.add_argument('-pl', '--perLayer', action = 'store_true', help = 'Used with the -eow option to plot efficiency per layer')
 parser.add_argument('-nn', '--neutronNumber', action = 'store_true', help = 'Used with the -eow option to plot neutron numbers')
 
 
@@ -424,6 +425,7 @@ elif(args.efficiencyOverWavelength):
   if args.fileNameCsv:
     for fileName in args.fileNameCsv:
       incidentNeutronNumber = incidentNeutronNumber + np.genfromtxt(fileName, delimiter=',')
+    incidentNeutronNumberError = np.sqrt(incidentNeutronNumber)
 
   hc = sh.HistCollection(args.fileName[0])
 
@@ -431,25 +433,30 @@ elif(args.efficiencyOverWavelength):
   bankHitError =  np.zeros(325) 
   binCenters =  np.zeros(325) 
   for i in range(4):
-    layer_hit_i = hc.hist(f"panel_lambda%s_hit"%i)
+    # layer_hit_i = hc.hist(f"panel_lambda%s_hit"%i)
+    layer_hit_i = hc.hist(f"layer{i}_lambda_hit")
     [hit_number, histError, histAxis, titleText, histLabel] = BCSplt.disassembleHist1d(layer_hit_i)
     bankHit = bankHit + hit_number
     bankHitError = np.sqrt(np.array(histError)**2 + bankHitError**2)
     binCenters = histAxis
 
   if not args.fileNameCsv:
-    sumNumberOfNeutrons = 1.26498e10 #hardcoded  (filtered neutron number for flat G4only sim)
-    numberOfBinsToFill = 0
-    for i in range(325):
-      if 2.0 < binCenters[i] and binCenters[i] < 13.0:
-        incidentNeutronNumber[i] = sumNumberOfNeutrons
-        numberOfBinsToFill = numberOfBinsToFill +1
-    incidentNeutronNumber = incidentNeutronNumber / numberOfBinsToFill
+    layer_hit_i = hc.hist("incident_lambda_true")
+    [incidentNeutronNumber, incidentNeutronNumberError, _, _, _] = BCSplt.disassembleHist1d(layer_hit_i)
+    incidentNeutronNumber = np.array(incidentNeutronNumber)
+    incidentNeutronNumberError = np.array(incidentNeutronNumberError)
+    # sumNumberOfNeutrons = 1.26498e10 #hardcoded  (filtered neutron number for flat G4only sim)
+    # numberOfBinsToFill = 0
+    # for i in range(325):
+    #   if 2.0 < binCenters[i] and binCenters[i] < 13.0:
+    #     incidentNeutronNumber[i] = sumNumberOfNeutrons
+    #     numberOfBinsToFill = numberOfBinsToFill +1
+    # incidentNeutronNumber = incidentNeutronNumber / numberOfBinsToFill
 
   
   # values = [bankHit[i]/incidentNeutronNumber[i]*100 if incidentNeutronNumber[i] != 0 else 0 for i in range(len(bankHit)) ]
   # errors = [m.sqrt(bankHit[i])/incidentNeutronNumber[i]*100  if incidentNeutronNumber[i] != 0 else 0 for i in range(len(values))]
-  values, errors = divide.divide(bankHit, bankHitError, incidentNeutronNumber, np.sqrt(incidentNeutronNumber))
+  values, errors = divide.divide(bankHit, bankHitError, incidentNeutronNumber, incidentNeutronNumberError)
   values = values * 100
   errors = errors * 100
 
@@ -471,15 +478,27 @@ elif(args.efficiencyOverWavelength):
   fig, ax = plt.subplots()
   fig.set_size_inches(10, 7)
 
-  if not args.neutronNumber: #plot efficiency
-    ax.errorbar(histAxis, values, yerr=errors, fmt='o--', linewidth=4, markersize=8)
-    ax.set_yticks(np.arange(0, 110, 10))
-    ax.set_ylabel('Detection efficiency [\%]')
-  else: #plot neutron number
+  if args.neutronNumber: #plot neutron number
+    plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
     ax.plot(binCenters, bankHit, 'ro-', label='Detection', linewidth=4, markersize=8)
     ax.plot(binCenters, incidentNeutronNumber, 'bo-', label='Incident', linewidth=4, markersize=8)
     ax.legend()
     ax.set_ylabel('Neutron number')
+  elif args.perLayer:  #plot efficiency per layer
+    for i in range(4):
+      # layer_hit_i = hc.hist(f"panel_lambda%s_hit"%i)
+      layer_hit_i = hc.hist(f"layer{i}_lambda_hit")
+      [hit_number, histError, histAxis, titleText, histLabel] = BCSplt.disassembleHist1d(layer_hit_i)
+      efficiency_i, error_i = divide.divide( np.array(hit_number), np.array(histError), incidentNeutronNumber, np.sqrt(incidentNeutronNumber))
+      ax.errorbar(histAxis, efficiency_i * 100, yerr=(error_i * 100), fmt='o--', linewidth=4, markersize=8, label=f'Layer {i+1}')
+    ax.errorbar(histAxis, values, yerr=errors, fmt='o--', linewidth=4, markersize=8, label='Total')
+    ax.set_yticks(np.arange(0, 110, 10))
+    ax.set_ylabel('Detection efficiency [\%]')
+    ax.legend()
+  else: #plot efficiency
+    ax.errorbar(histAxis, values, yerr=errors, fmt='o--', linewidth=4, markersize=8)
+    ax.set_yticks(np.arange(0, 110, 10))
+    ax.set_ylabel('Detection efficiency [\%]')
 
 
   ax.set_xlabel('Wavelength [{\AA}]')

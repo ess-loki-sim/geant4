@@ -134,20 +134,36 @@ int main(int argc, char**argv) {
        h_neutron_pixel_hit->setXLabel("Pixel ID along straw");
        h_neutron_pixel_hit->setYLabel("Straw ID");
 
-  auto h_neutron_panelConvCounter = hc.book1D("Neutron conversion counter for 4 panels", 4, 0, 4, "neutron_panelConvCounter");
-       h_neutron_panelConvCounter->setXLabel("Panel number");
+  auto h_neutron_layerConvCounter = hc.book1D("Neutron conversion counter for 4 layers", 4, 0, 4, "neutron_layerConvCounter");
+       h_neutron_layerConvCounter->setXLabel("Layer number");
 
-  auto h_neutron_panelHitCounter = hc.book1D("Neutron hit counter for 4 panels", 4, 0, 4, "neutron_panelHitCounter");
-       h_neutron_panelHitCounter->setXLabel("Panel number");
+  auto h_neutron_layerHitCounter = hc.book1D("Neutron hit counter for 4 layers", 4, 0, 4, "neutron_layerHitCounter");
+       h_neutron_layerHitCounter->setXLabel("Layer number");
 
-  auto h_panel0_lambda_hit = hc.book1D("Detection neutron wavelength for panel 0", 325, 0, 14, "panel_lambda0_hit");
-       h_panel0_lambda_hit->setXLabel("Wavelength [angstrom]");
-  auto h_panel1_lambda_hit = hc.book1D("Detection neutron wavelength for panel 1", 325, 0, 14, "panel_lambda1_hit");
-       h_panel1_lambda_hit->setXLabel("Wavelength [angstrom]");
-  auto h_panel2_lambda_hit = hc.book1D("Detection neutron wavelength for panel 2", 325, 0, 14, "panel_lambda2_hit");
-       h_panel2_lambda_hit->setXLabel("Wavelength [angstrom]");
-  auto h_panel3_lambda_hit = hc.book1D("Detection neutron wavelength for panel 3", 325, 0, 14, "panel_lambda3_hit");
-       h_panel3_lambda_hit->setXLabel("Wavelength [angstrom]");
+  auto h_mcpl_lambda_true = hc.book1D("Neutron true wavelength from MCPL", 325, 0, 14, "mcpl_lambda_true");
+  auto h_mcpl_lambda = hc.book1D("Neutron wavelength calculated from TOF in MCPL", 325, 0, 14, "mcpl_lambda");
+
+  auto h_incident_lambda_true = hc.book1D("Incident neutron true wavelength", 325, 0, 14, "incident_lambda_true");
+  auto h_incident_lambda = hc.book1D("Incident neutron wavelength calculated from TOF", 325, 0, 14, "incident_lambda");
+
+
+  auto h_layer0_lambda_hit = hc.book1D("Detection neutron wavelength for layer 0", 325, 0, 14, "layer0_lambda_hit");
+       h_layer0_lambda_hit->setXLabel("Wavelength [angstrom]");
+  auto h_layer1_lambda_hit = hc.book1D("Detection neutron wavelength for layer 1", 325, 0, 14, "layer1_lambda_hit");
+       h_layer1_lambda_hit->setXLabel("Wavelength [angstrom]");
+  auto h_layer2_lambda_hit = hc.book1D("Detection neutron wavelength for layer 2", 325, 0, 14, "layer2_lambda_hit");
+       h_layer2_lambda_hit->setXLabel("Wavelength [angstrom]");
+  auto h_layer3_lambda_hit = hc.book1D("Detection neutron wavelength for layer 3", 325, 0, 14, "layer3_lambda_hit");
+       h_layer3_lambda_hit->setXLabel("Wavelength [angstrom]");
+
+  auto h_layer0_lambda_true_hit = hc.book1D("Detection neutron true wavelength for layer 0", 325, 0, 14, "layer0_lambda_true_hit");
+       h_layer0_lambda_true_hit->setXLabel("Wavelength [angstrom]");
+  auto h_layer1_lambda_true_hit = hc.book1D("Detection neutron true wavelength for layer 1", 325, 0, 14, "layer1_lambda_true_hit");
+       h_layer1_lambda_true_hit->setXLabel("Wavelength [angstrom]");
+  auto h_layer2_lambda_true_hit = hc.book1D("Detection neutron true wavelength for layer 2", 325, 0, 14, "layer2_lambda_true_hit");
+       h_layer2_lambda_true_hit->setXLabel("Wavelength [angstrom]");
+  auto h_layer3_lambda_true_hit = hc.book1D("Detection neutron true wavelength for layer 3", 325, 0, 14, "layer3_lambda_true_hit");
+       h_layer3_lambda_true_hit->setXLabel("Wavelength [angstrom]");
 
   auto h_neutron_counters = hc.bookCounts("General neutron counters","neutron_counters"); /////////////
   auto count_initial_neutrons = h_neutron_counters->addCounter("count_initial_neutrons");
@@ -184,6 +200,19 @@ int main(int argc, char**argv) {
       const double theta_true = Utils::theta(dir_true)/Units::degree;
       h_neutron_theta->fill(theta_true, neutron->weight());
 
+      double lambdaMcpl = 0.0;
+      double lambdaMcplCalculated = 0.0;
+      if (gen.getName()=="G4MCPLPlugins/MCPLGen"){ //works only for non-zero initial TOF
+        const double ekinMcpl = segBegin->startEKin();
+        lambdaMcpl = Utils::neutronEKinToWavelength(ekinMcpl) / Units::angstrom;
+        h_mcpl_lambda_true->fill(lambdaMcpl, neutron->weight());
+
+        const double velocityMcplCalculated = (sourceSampleDistance / Units::m) / (stepFirst->preTime() / Units::s);
+        lambdaMcplCalculated = Utils::neutron_meters_per_second_to_angstrom(velocityMcplCalculated);
+        h_mcpl_lambda->fill(lambdaMcplCalculated, neutron->weight());
+
+      }
+
       if(auto bankSegment = segments_bank.next()){
         auto stepFirstInBank = bankSegment->firstStep();
         const double xBankEnter = stepFirstInBank->preGlobalX()/Units::mm;
@@ -197,6 +226,11 @@ int main(int argc, char**argv) {
         }
 
         h_neutron_xy_bank_filtered->fill(-xBankEnter, yBankEnter, neutron->weight());
+
+        if (gen.getName()=="G4MCPLPlugins/MCPLGen"){ //works only for non-zero initial TOF
+          h_incident_lambda_true->fill(lambdaMcpl, neutron->weight());
+          h_incident_lambda->fill(lambdaMcplCalculated, neutron->weight());
+        }
       }
       //else{
       //  std::cout<<"\n No bank segment??";
@@ -219,8 +253,8 @@ int main(int argc, char**argv) {
         h_neutron_zy_conv->fill(position_conv[2]/Units::mm, position_conv[1]/Units::cm, neutron->weight());
         h_neutron_xy_conv->fill(-position_conv[0]/Units::mm, position_conv[1]/Units::mm, neutron->weight());
 
-        const int panelNumber_conv = banks->getTubeLayerId(0, tubeId_conv, oldTubeNumbering);
-        h_neutron_panelConvCounter->fill(panelNumber_conv, neutron->weight());
+        const int layerNumber_conv = banks->getTubeLayerId(0, tubeId_conv, oldTubeNumbering);
+        h_neutron_layerConvCounter->fill(layerNumber_conv, neutron->weight());
 
         if (hit.eventHasHit()) {
           count_neutrons_hit += 1;
@@ -235,7 +269,7 @@ int main(int argc, char**argv) {
           const int pixelId = banks->getPixelId(0, tubeId_conv, strawId_conv, position_hit[0], position_hit[1]);
 
           h_neutron_pixel_hit->fill(pixelId%numberOfPixelsPerStraw, std::floor(pixelId/numberOfPixelsPerStraw), hit.eventHitWeight());
-          h_neutron_panelHitCounter->fill(panelNumber_conv, hit.eventHitWeight());
+          h_neutron_layerHitCounter->fill(layerNumber_conv, hit.eventHitWeight());
 
           //TODO should implement method (in PixelatedBanks class) to get positionOnWire_hit coordinate. Ask Judit, how it is done in real data reduction.
           const double sampleToExactHitPositionDistance = std::sqrt(std::pow((position_hit[0] - initialPosition[0]), 2) +
@@ -253,17 +287,24 @@ int main(int argc, char**argv) {
           }
           const double lambda_hit_calculated = Utils::neutron_meters_per_second_to_angstrom(velocity_calculated);
 
-          if (panelNumber_conv == 0){
-            h_panel0_lambda_hit->fill(lambda_hit_calculated, hit.eventHitWeight());
+          const double actualEkin = segL->startEKin();
+          const double actualLambda = Utils::neutronEKinToWavelength(actualEkin) / Units::angstrom;
+
+          if (layerNumber_conv == 0){
+            h_layer0_lambda_hit->fill(lambda_hit_calculated, hit.eventHitWeight());
+            h_layer0_lambda_true_hit->fill(actualLambda, hit.eventHitWeight());
           }
-          else if(panelNumber_conv == 1){
-            h_panel1_lambda_hit->fill(lambda_hit_calculated, hit.eventHitWeight());
+          else if(layerNumber_conv == 1){
+            h_layer1_lambda_hit->fill(lambda_hit_calculated, hit.eventHitWeight());
+            h_layer1_lambda_true_hit->fill(actualLambda, hit.eventHitWeight());
           }
-          else if(panelNumber_conv == 2){
-            h_panel2_lambda_hit->fill(lambda_hit_calculated, hit.eventHitWeight());
+          else if(layerNumber_conv == 2){
+            h_layer2_lambda_hit->fill(lambda_hit_calculated, hit.eventHitWeight());
+            h_layer2_lambda_true_hit->fill(actualLambda, hit.eventHitWeight());
           }
-          else if(panelNumber_conv == 3){
-            h_panel3_lambda_hit->fill(lambda_hit_calculated, hit.eventHitWeight());
+          else if(layerNumber_conv == 3){
+            h_layer3_lambda_hit->fill(lambda_hit_calculated, hit.eventHitWeight());
+            h_layer3_lambda_true_hit->fill(actualLambda, hit.eventHitWeight());
           }
 
           if (createDetectionMcplFile == true) {
