@@ -337,6 +337,10 @@ bool GeoBCS::validateParameters() {
       return false;
     }
   }
+  else if(rear_detector_distance < 5.0 *Units::m) {
+    printf("ERROR: Wrong rear_detector_distance_m value for LOKI! (It should be >=5.0 m)\n");
+      return false;
+  }
   return true;
 }
 
