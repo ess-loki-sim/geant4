@@ -200,17 +200,15 @@ int main(int argc, char**argv) {
       const double theta_true = Utils::theta(dir_true)/Units::degree;
       h_neutron_theta->fill(theta_true, neutron->weight());
 
-      double lambdaMcpl = 0.0;
+      const double ekinMcpl = segBegin->startEKin();
+      const double lambdaInitial = Utils::neutronEKinToWavelength(ekinMcpl) / Units::angstrom;
+      h_mcpl_lambda_true->fill(lambdaInitial, neutron->weight());
+      
       double lambdaMcplCalculated = 0.0;
       if (gen.getName()=="G4MCPLPlugins/MCPLGen"){ //works only for non-zero initial TOF
-        const double ekinMcpl = segBegin->startEKin();
-        lambdaMcpl = Utils::neutronEKinToWavelength(ekinMcpl) / Units::angstrom;
-        h_mcpl_lambda_true->fill(lambdaMcpl, neutron->weight());
-
         const double velocityMcplCalculated = (sourceSampleDistance / Units::m) / (stepFirst->preTime() / Units::s);
         lambdaMcplCalculated = Utils::neutron_meters_per_second_to_angstrom(velocityMcplCalculated);
         h_mcpl_lambda->fill(lambdaMcplCalculated, neutron->weight());
-
       }
 
       if(auto bankSegment = segments_bank.next()){
@@ -227,8 +225,8 @@ int main(int argc, char**argv) {
 
         h_neutron_xy_bank_filtered->fill(-xBankEnter, yBankEnter, neutron->weight());
 
+        h_incident_lambda_true->fill(lambdaInitial, neutron->weight());
         if (gen.getName()=="G4MCPLPlugins/MCPLGen"){ //works only for non-zero initial TOF
-          h_incident_lambda_true->fill(lambdaMcpl, neutron->weight());
           h_incident_lambda->fill(lambdaMcplCalculated, neutron->weight());
         }
       }
