@@ -41,17 +41,19 @@ int main(int argc, char**argv) {
 
   auto &gen = setup->gen();
 
-  double sourceSampleDistance = 0*Units::m;
+  double sourceGeneratorDistance = 0*Units::m;
   if (gen.getName()=="G4MCPLPlugins/MCPLGen") {
-    sourceSampleDistance = 25.61*Units::m; //From Larmor McStas file
+    // McStas Larmor model source to sample distance is 25.61 m, but positions in the MCPL file
+    // correspond to the focusAroundDetector Slit component, which is at 0.42 m from the sample
+    sourceGeneratorDistance = (25.61 + 0.42) *Units::m;
   }
-  else if(gen.getName()=="LOKI.FloodSourceGen/FloodSourceGen"){
-    sourceSampleDistance = gen.getParameterDouble("source_sample_distance_meters") *Units::m;
+  else if(gen.getName()=="LOKI.FloodSourceGen/FloodSourceGen") {
+    sourceGeneratorDistance = gen.getParameterDouble("source_sample_distance_meters") *Units::m;
   }
-  printf("sourceSampleDistance: %f\n", sourceSampleDistance);
+  printf("sourceGeneratorDistance: %f\n", sourceGeneratorDistance);
 
   setup->dump();
-  
+
   DetHitApproximation hit(&dr,1.2*Units::cm,120*Units::keV,"CountingGas" ); // defined for He3 gas
 
   GriffAnaUtils::SegmentIterator segments_bank(&dr);
@@ -188,7 +190,6 @@ int main(int argc, char**argv) {
   const double xBeamOffset = tmp_x_offset_meters ? tmp_x_offset_meters :tmp_dx_meter;
 
   while (dr.loopEvents()) {  
-    
     while (auto neutron = primary_neutrons.next()) {
       count_initial_neutrons += 1;
 
@@ -206,7 +207,7 @@ int main(int argc, char**argv) {
       
       double lambdaMcplCalculated = 0.0;
       if (gen.getName()=="G4MCPLPlugins/MCPLGen"){ //works only for non-zero initial TOF
-        const double velocityMcplCalculated = (sourceSampleDistance / Units::m) / (stepFirst->preTime() / Units::s);
+        const double velocityMcplCalculated = (sourceGeneratorDistance / Units::m) / (stepFirst->preTime() / Units::s);
         lambdaMcplCalculated = Utils::neutron_meters_per_second_to_angstrom(velocityMcplCalculated);
         h_mcpl_lambda->fill(lambdaMcplCalculated, neutron->weight());
       }
@@ -237,17 +238,17 @@ int main(int argc, char**argv) {
       auto segL = neutron->lastSegment();
       if (segL->volumeName()=="Converter") {
         count_neutrons_converted += 1;
-        
+
         auto stepL = segL->lastStep();
         const double position_conv[3] = {stepL->postGlobalX(), stepL->postGlobalY(), stepL->postGlobalZ()};
-            
+
         /// volumeCopyNumber() = CountingGas; volumeCopyNumber(1) = Converter; volumeCopyNumber(2) = straw wall; volumeCopyNumber(3) = EmptyTube;
         /// volumeCopyNumber(4) = TubeWall; volumeCopyNumber(5) = EmptyPackBox; volumeCopyNumber(6) = Bank; volumeCopyNumber(7) = World
         const int strawId_conv = segL->volumeCopyNumber(1);
         const int tubeId_conv = segL->volumeCopyNumber(3);
         //const int bankId_conv = segL->volumeCopyNumber(5); only the rear bank is present in the geometry with bankId=0
 
-        
+
         h_neutron_zy_conv->fill(position_conv[2]/Units::mm, position_conv[1]/Units::cm, neutron->weight());
         h_neutron_xy_conv->fill(-position_conv[0]/Units::mm, position_conv[1]/Units::mm, neutron->weight());
 
@@ -257,7 +258,7 @@ int main(int argc, char**argv) {
         if (hit.eventHasHit()) {
           count_neutrons_hit += 1;
           const double position_hit[3] = {hit.eventHitPositionX(), hit.eventHitPositionY(), hit.eventHitPositionZ()};
- 
+
           h_neutron_zy_hit->fill(position_hit[2]/Units::mm, position_hit[1]/Units::cm, hit.eventHitWeight());
           h_neutron_xy_hit->fill(-position_hit[0]/Units::mm, position_hit[1]/Units::mm, hit.eventHitWeight());
 
@@ -277,7 +278,7 @@ int main(int argc, char**argv) {
           const double tof_hit = hit.eventHitTime()/Units::ms;
           double velocity_calculated = -1;
           if (tof_hit > 0.0) {
-            velocity_calculated = ((sampleToExactHitPositionDistance + sourceSampleDistance) / Units::m) / (hit.eventHitTime() / Units::s);
+            velocity_calculated = ((sampleToExactHitPositionDistance + sourceGeneratorDistance) / Units::m) / (hit.eventHitTime() / Units::s);
           }
           else {
             printf("Error in hit tof value, tof zero or negative \n");
