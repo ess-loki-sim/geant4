@@ -19,6 +19,20 @@
 #define M_PI  3.14159265358979323846  //  pi
 #endif
 
+double calculateWavelength(const double* initialPosition, const double* position_hit, const double tof, const double sourceGeneratorDistance) {
+  const double sampleToPositionDistance = std::sqrt(std::pow((position_hit[0] - initialPosition[0]), 2) +
+                                                    std::pow((position_hit[1] - initialPosition[1]), 2) +
+                                                    std::pow((position_hit[2] - initialPosition[2]), 2));
+  double velocity_calculated = -1;
+  if (tof > 0.0) {
+    velocity_calculated = ((sampleToPositionDistance + sourceGeneratorDistance)/Units::m) / (tof/Units::s);
+  }
+  else {
+    printf("Error in hit tof value, tof zero or negative \n");
+    return 0;
+  }
+  return Utils::neutron_meters_per_second_to_angstrom(velocity_calculated);
+}
 
 int main(int argc, char**argv) {
   const bool createDetectionMcplFile = true;
@@ -56,12 +70,19 @@ int main(int argc, char**argv) {
 
   DetHitApproximation hit(&dr,1.2*Units::cm,120*Units::keV,"CountingGas" ); // defined for He3 gas
 
-  GriffAnaUtils::SegmentIterator segments_bank(&dr);
-  segments_bank.addFilter(new GriffAnaUtils::SegmentFilter_Volume("Bank"));  
-
   GriffAnaUtils::TrackIterator primary_neutrons(&dr);
   primary_neutrons.addFilter(new GriffAnaUtils::TrackFilter_Primary());
   primary_neutrons.addFilter(new GriffAnaUtils::TrackFilter_PDGCode(2112));
+
+  GriffAnaUtils::SegmentIterator segments_bank(&dr);
+  segments_bank.addFilter(new GriffAnaUtils::SegmentFilter_Volume("Bank"));  
+  segments_bank.addFilter(new GriffAnaUtils::TrackFilter_Primary());
+  segments_bank.addFilter(new GriffAnaUtils::TrackFilter_PDGCode(2112));
+
+  GriffAnaUtils::SegmentIterator segments_TubeWall(&dr); 
+  segments_TubeWall.addFilter(new GriffAnaUtils::SegmentFilter_Volume("TubeWall"));
+  segments_TubeWall.addFilter(new GriffAnaUtils::TrackFilter_Primary());
+  segments_TubeWall.addFilter(new GriffAnaUtils::TrackFilter_PDGCode(2112));
 
   DetectionFileCreator* detectionFile = nullptr;
   if (createDetectionMcplFile == true) {
@@ -167,6 +188,22 @@ int main(int argc, char**argv) {
   auto h_layer3_lambda_true_hit = hc.book1D("Detection neutron true wavelength for layer 3", 325, 0, 14, "layer3_lambda_true_hit");
        h_layer3_lambda_true_hit->setXLabel("Wavelength [angstrom]");
 
+  auto h_layer_incident_lambda = hc.book2D("Incident wavelength for layers", 4, 0, 4, 325, 0, 14, "layer_incident_lambda");
+       h_layer_incident_lambda->setXLabel("Layer id");
+       h_layer_incident_lambda->setYLabel("Wavelength [angstrom]");
+  
+  auto h_layer_incident_lambda_true = hc.book2D("Incident true wavelength for layers", 4, 0, 4, 325, 0, 14, "layer_incident_lambda_true");
+       h_layer_incident_lambda_true->setXLabel("Layer id");
+       h_layer_incident_lambda_true->setYLabel("Wavelength [angstrom]");
+  
+  auto h_layer_first_incident_lambda = hc.book2D("Incident wavelength for layers (first enter only)", 4, 0, 4, 325, 0, 14, "layer_first_incident_lambda");
+       h_layer_first_incident_lambda->setXLabel("Layer id");
+       h_layer_first_incident_lambda->setYLabel("Wavelength [angstrom]");
+  
+  auto h_layer_first_incident_lambda_true = hc.book2D("Incident true wavelength for layers (first enter only)", 4, 0, 4, 325, 0, 14, "layer_first_incident_lambda_true");
+       h_layer_first_incident_lambda_true->setXLabel("Layer id");
+       h_layer_first_incident_lambda_true->setYLabel("Wavelength [angstrom]");
+
   auto h_neutron_counters = hc.bookCounts("General neutron counters","neutron_counters"); /////////////
   auto count_initial_neutrons = h_neutron_counters->addCounter("count_initial_neutrons");
   auto count_neutrons_converted = h_neutron_counters->addCounter("count_neutrons_converted");
@@ -235,6 +272,30 @@ int main(int argc, char**argv) {
       //  std::cout<<"\n No bank segment??";
       //}
 
+      int previousLayerId = -1;
+      while (auto tubeWallSegment = segments_TubeWall.next()) {
+        const int tubeId = tubeWallSegment->volumeCopyNumber(3);
+        const int layerId = banks->getTubeLayerId(0, tubeId, oldTubeNumbering);
+        const double actualEkin = tubeWallSegment->startEKin();
+
+        auto stepF = tubeWallSegment->firstStep();
+        const double position[3] = {stepF->preGlobalX(), stepF->preGlobalY(), stepF->preGlobalZ()};
+        const double lambda_calculated = calculateWavelength(initialPosition, position, stepF->preTime(), sourceGeneratorDistance);
+        const double actualLambda = Utils::neutronEKinToWavelength(actualEkin)/Units::angstrom;
+
+        if(layerId != previousLayerId && actualEkin) { 
+          previousLayerId = layerId;
+          h_layer_incident_lambda_true->fill(layerId, actualLambda, neutron->weight());
+          h_layer_incident_lambda->fill(layerId, lambda_calculated, neutron->weight());
+        }
+        int firstEnterToLayer[4] = {1, 1, 1, 1};
+        if(firstEnterToLayer[layerId]) {
+          firstEnterToLayer[layerId] = 0;
+          h_layer_first_incident_lambda_true->fill(layerId, actualLambda, neutron->weight());
+          h_layer_first_incident_lambda->fill(layerId, lambda_calculated, neutron->weight());
+        }
+      }
+
       auto segL = neutron->lastSegment();
       if (segL->volumeName()=="Converter") {
         count_neutrons_converted += 1;
@@ -271,20 +332,22 @@ int main(int argc, char**argv) {
           h_neutron_layerHitCounter->fill(layerNumber_conv, hit.eventHitWeight());
 
           //TODO should implement method (in PixelatedBanks class) to get positionOnWire_hit coordinate. Ask Judit, how it is done in real data reduction.
-          const double sampleToExactHitPositionDistance = std::sqrt(std::pow((position_hit[0] - initialPosition[0]), 2) +
-                                                                    std::pow((position_hit[1] - initialPosition[1]), 2) +
-                                                                    std::pow((position_hit[2] - initialPosition[2]), 2));
+          // const double sampleToExactHitPositionDistance = std::sqrt(std::pow((position_hit[0] - initialPosition[0]), 2) +
+          //                                                           std::pow((position_hit[1] - initialPosition[1]), 2) +
+          //                                                           std::pow((position_hit[2] - initialPosition[2]), 2));
 
-          const double tof_hit = hit.eventHitTime()/Units::ms;
-          double velocity_calculated = -1;
-          if (tof_hit > 0.0) {
-            velocity_calculated = ((sampleToExactHitPositionDistance + sourceGeneratorDistance) / Units::m) / (hit.eventHitTime() / Units::s);
-          }
-          else {
-            printf("Error in hit tof value, tof zero or negative \n");
-            return 1;
-          }
-          const double lambda_hit_calculated = Utils::neutron_meters_per_second_to_angstrom(velocity_calculated);
+          // const double tof_hit = hit.eventHitTime()/Units::ms;
+          // double velocity_calculated = -1;
+          // if (tof_hit > 0.0) {
+          //   velocity_calculated = ((sampleToExactHitPositionDistance + sourceGeneratorDistance) / Units::m) / (hit.eventHitTime() / Units::s);
+          // }
+          // else {
+          //   printf("Error in hit tof value, tof zero or negative \n");
+          //   return 1;
+          // }
+          // const double lambda_hit_calculated = Utils::neutron_meters_per_second_to_angstrom(velocity_calculated);
+
+          const double lambda_hit_calculated = calculateWavelength(initialPosition, position_hit, hit.eventHitTime(), sourceGeneratorDistance);
 
           const double actualEkin = segL->startEKin();
           const double actualLambda = Utils::neutronEKinToWavelength(actualEkin) / Units::angstrom;
