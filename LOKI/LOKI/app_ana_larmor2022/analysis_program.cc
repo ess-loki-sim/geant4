@@ -273,8 +273,9 @@ int main(int argc, char**argv) {
       //}
 
       int previousLayerId = -1;
+      int firstEnterToLayer[4] = {1, 1, 1, 1};
       while (auto tubeWallSegment = segments_TubeWall.next()) {
-        const int tubeId = tubeWallSegment->volumeCopyNumber(3);
+        const int tubeId = tubeWallSegment->volumeCopyNumber();
         const int layerId = banks->getTubeLayerId(0, tubeId, oldTubeNumbering);
         const double actualEkin = tubeWallSegment->startEKin();
 
@@ -288,7 +289,6 @@ int main(int argc, char**argv) {
           h_layer_incident_lambda_true->fill(layerId, actualLambda, neutron->weight());
           h_layer_incident_lambda->fill(layerId, lambda_calculated, neutron->weight());
         }
-        int firstEnterToLayer[4] = {1, 1, 1, 1};
         if(firstEnterToLayer[layerId]) {
           firstEnterToLayer[layerId] = 0;
           h_layer_first_incident_lambda_true->fill(layerId, actualLambda, neutron->weight());
