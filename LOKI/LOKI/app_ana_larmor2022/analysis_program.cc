@@ -84,6 +84,11 @@ int main(int argc, char**argv) {
   segments_TubeWall.addFilter(new GriffAnaUtils::TrackFilter_Primary());
   segments_TubeWall.addFilter(new GriffAnaUtils::TrackFilter_PDGCode(2112));
 
+  GriffAnaUtils::SegmentIterator segments_StrawWall(&dr); 
+  segments_StrawWall.addFilter(new GriffAnaUtils::SegmentFilter_Volume("StrawWall"));
+  segments_StrawWall.addFilter(new GriffAnaUtils::TrackFilter_Primary());
+  segments_StrawWall.addFilter(new GriffAnaUtils::TrackFilter_PDGCode(2112));
+
   DetectionFileCreator* detectionFile = nullptr;
   if (createDetectionMcplFile == true) {
     detectionFile = new DetectionFileCreator("detectionEvents.mcpl");
@@ -203,6 +208,22 @@ int main(int argc, char**argv) {
   auto h_layer_first_incident_lambda_true = hc.book2D("Incident true wavelength for layers (first enter only)", 4, 0, 4, 325, 0, 14, "layer_first_incident_lambda_true");
        h_layer_first_incident_lambda_true->setXLabel("Layer id");
        h_layer_first_incident_lambda_true->setYLabel("Wavelength [angstrom]");
+  
+  auto h_straw_incident_lambda_true = hc.book2D("Incident true wavelength for straws", numberOfStraws, 0, numberOfStraws, 325, 0, 14, "straw_incident_lambda_true");
+       h_straw_incident_lambda_true->setXLabel("Straw id");
+       h_straw_incident_lambda_true->setYLabel("Wavelength [angstrom]");
+
+  auto h_straw_incident_lambda = hc.book2D("Incident wavelength for straws", numberOfStraws, 0, numberOfStraws, 325, 0, 14, "straw_incident_lambda");
+       h_straw_incident_lambda->setXLabel("Straw id");
+       h_straw_incident_lambda->setYLabel("Wavelength [angstrom]");
+
+  auto h_straw_lambda_true_hit = hc.book2D("Detection true wavelength for straws ", numberOfStraws, 0, numberOfStraws, 325, 0, 14, "straw_lambda_true_hit");
+       h_straw_lambda_true_hit->setXLabel("Straw id");
+       h_straw_lambda_true_hit->setYLabel("Wavelength [angstrom]");
+
+  auto h_straw_lambda_hit = hc.book2D("Detection wavelength for straws ", numberOfStraws, 0, numberOfStraws, 325, 0, 14, "straw_lambda_hit");
+       h_straw_lambda_hit->setXLabel("Straw id");
+       h_straw_lambda_hit->setYLabel("Wavelength [angstrom]");
 
   auto h_neutron_counters = hc.bookCounts("General neutron counters","neutron_counters"); /////////////
   auto count_initial_neutrons = h_neutron_counters->addCounter("count_initial_neutrons");
@@ -296,6 +317,31 @@ int main(int argc, char**argv) {
         }
       }
 
+      int previousStrawId = -1;
+      //int firstEnterToLayer[4] = {1, 1, 1, 1};
+      while (auto strawWallSegment = segments_StrawWall.next()) {
+        const int locStrawId = strawWallSegment->volumeCopyNumber();
+        const int tubeId = strawWallSegment->volumeCopyNumber(2);
+        const int globalStrawId = tubeId * 7 + locStrawId;
+        const double actualEkin = strawWallSegment->startEKin();
+
+        auto stepF = strawWallSegment->firstStep();
+        const double position[3] = {stepF->preGlobalX(), stepF->preGlobalY(), stepF->preGlobalZ()};
+        const double lambda_calculated = calculateWavelength(initialPosition, position, stepF->preTime(), sourceGeneratorDistance);
+        const double actualLambda = Utils::neutronEKinToWavelength(actualEkin)/Units::angstrom;
+
+        if(globalStrawId != previousStrawId && actualEkin) { 
+          previousStrawId = globalStrawId;
+          h_straw_incident_lambda_true->fill(globalStrawId, actualLambda, neutron->weight());
+          h_straw_incident_lambda->fill(globalStrawId, lambda_calculated, neutron->weight());
+        }
+        // if(firstEnterToLayer[layerId]) {
+        //   firstEnterToLayer[layerId] = 0;
+        //   h_layer_first_incident_lambda_true->fill(layerId, actualLambda, neutron->weight());
+        //   h_layer_first_incident_lambda->fill(layerId, lambda_calculated, neutron->weight());
+        // }
+      }
+
       auto segL = neutron->lastSegment();
       if (segL->volumeName()=="Converter") {
         count_neutrons_converted += 1;
@@ -368,6 +414,10 @@ int main(int argc, char**argv) {
             h_layer3_lambda_hit->fill(lambda_hit_calculated, hit.eventHitWeight());
             h_layer3_lambda_true_hit->fill(actualLambda, hit.eventHitWeight());
           }
+          
+          const int globalStrawId = tubeId_conv * 7 + strawId_conv;
+          h_straw_lambda_hit->fill(globalStrawId, lambda_hit_calculated, hit.eventHitWeight());
+          h_straw_lambda_true_hit->fill(globalStrawId, actualLambda, hit.eventHitWeight());
 
           if (createDetectionMcplFile == true) {
             detectionFile->addDetectionEvent(pixelId, hit.eventHitTime()/Units::ms);
