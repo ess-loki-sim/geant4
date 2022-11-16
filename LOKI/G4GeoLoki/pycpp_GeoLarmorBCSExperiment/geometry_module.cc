@@ -25,7 +25,7 @@ protected:
   virtual bool validateParameters();
 private:
   //Functions
-  G4LogicalVolume * createTubeLV(double converter_thickness, double straw_length);  // create the logical volume of a tube for easy placement in a panel
+  G4LogicalVolume * createTubeLV(double converter_thickness, double straw_length);
   G4LogicalVolume * createPackBoxLV(double strawLength, int packNumber, int numberOfPacksForInvertedNumbering);
   G4LogicalVolume * createBankLV(int bankId);
 

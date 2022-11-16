@@ -2,7 +2,9 @@
 
 DetectionFileCreator::DetectionFileCreator(const char* fileName): m_fileName(fileName) {
   this->detMcpl = mcpl_create_outfile(fileName);
+  //mcpl_hdr_set_srcname(this->detMcpl, "LOKI DetectionFileCreator Class");
   mcpl_hdr_add_comment(this->detMcpl, "Neutrons in this file are actually detection events, and userflags are pixel ID's of hits. Created with the DetectionFileCreator class.");
+  mcpl_hdr_add_comment(this->detMcpl, "ARG=VAL");
   mcpl_enable_userflags(this->detMcpl);
   this->mcplParticle = mcpl_get_empty_particle(this->detMcpl);
   initiateMcplParticle();
@@ -26,7 +28,7 @@ void DetectionFileCreator::initiateMcplParticle() {
 }
 
 void DetectionFileCreator::addDetectionEvent(const int pixelId, const double tof) {
-  this->mcplParticle->userflags = pixelId; 
+  this->mcplParticle->userflags = pixelId;
   this->mcplParticle->time = tof;
   mcpl_add_particle(this->detMcpl, this->mcplParticle);
  }

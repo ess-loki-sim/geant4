@@ -310,8 +310,8 @@ G4VPhysicalVolume* GeoBCS::Construct(){
       auto rotation = new G4RotationMatrix();
       rotation->rotateX(banks->getBankRotation(bankId, 2) * rotateDir);
 
-      place(lv_triangularMask, 
-            banks->getTriangularBoronMaskPosition(maskId, 0), banks->getTriangularBoronMaskPosition(maskId, 1), banks->getTriangularBoronMaskPosition(maskId, 2), 
+      place(lv_triangularMask,
+            banks->getTriangularBoronMaskPosition(maskId, 0),banks->getTriangularBoronMaskPosition(maskId, 1),banks->getTriangularBoronMaskPosition(maskId, 2),
             lvWorld, BLACK, -5, 0, rotation);
     }
   }
