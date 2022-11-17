@@ -62,7 +62,7 @@ cmdbase = [ 'ess_loki_simanachain_rear_bank_larmor'
 
 #jobList = [*range(82,98, 1)]+[*range(137,153, 1)]+[*range(210,250, 1)]
 
-for i in rang(enjobs-1): # for seeded events                                                                    
+for i in range(njobs-1): # for seeded events                                                                    
     #if i not in [3296]:
     #continue
     if  i < job_nr_min:

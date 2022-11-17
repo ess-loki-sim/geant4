@@ -62,8 +62,11 @@ parser.add_argument('-odl', '--overlayDetectionLambda', action = 'store_true', h
 
 parser.add_argument('-eow', '--efficiencyOverWavelength', action = 'store_true', help = 'Plot efficiency(wavelength). Incident neutron number per wavelength bin can be provided in a csv file if the incident beam was not histogrammed (used for the larmor2022experiment). The csv file can be created using the binMCPLNeutronWavelength script. (Turn it into a neutron number plot using -nn)')
 parser.add_argument('-fncsv', '--fileNameCsv',nargs = '*', help = 'Csv input file name(s)')
+parser.add_argument('-plc', '--perLayerContribution', action = 'store_true', help = 'Used with the -eow option to plot efficiency contribution of each layer')
 parser.add_argument('-pl', '--perLayer', action = 'store_true', help = 'Used with the -eow option to plot efficiency per layer')
+parser.add_argument('-ps', '--perStraw', action = 'store_true', help = 'Used with the -eow option to plot efficiency per straw (5-5 from front/back layers with most incident neutrons)')
 parser.add_argument('-nn', '--neutronNumber', action = 'store_true', help = 'Used with the -eow option to plot neutron numbers')
+parser.add_argument('-tw', '--trueWavelength', action = 'store_true', help = 'Used with the -eow option to use true wavelengths intead of calculated ones')
 
 
 #parser.add_argument('-hn', '--histName', nargs = '*', help = 'Name of histograms to plot.(Plot all if not given')
@@ -434,14 +437,14 @@ elif(args.efficiencyOverWavelength):
   binCenters =  np.zeros(325) 
   for i in range(4):
     # layer_hit_i = hc.hist(f"panel_lambda%s_hit"%i)
-    layer_hit_i = hc.hist(f"layer{i}_lambda_hit")
+    layer_hit_i = hc.hist(f"layer{i}_lambda_true_hit") if args.trueWavelength else hc.hist(f"layer{i}_lambda_hit")
     [hit_number, histError, histAxis, titleText, histLabel] = BCSplt.disassembleHist1d(layer_hit_i)
     bankHit = bankHit + hit_number
     bankHitError = np.sqrt(np.array(histError)**2 + bankHitError**2)
     binCenters = histAxis
 
   if not args.fileNameCsv:
-    layer_hit_i = hc.hist("incident_lambda_true")
+    layer_hit_i = hc.hist("incident_lambda_true") if args.trueWavelength else hc.hist("incident_lambda") 
     [incidentNeutronNumber, incidentNeutronNumberError, _, _, _] = BCSplt.disassembleHist1d(layer_hit_i)
     incidentNeutronNumber = np.array(incidentNeutronNumber)
     incidentNeutronNumberError = np.array(incidentNeutronNumberError)
@@ -484,31 +487,86 @@ elif(args.efficiencyOverWavelength):
     ax.plot(binCenters, incidentNeutronNumber, 'bo-', label='Incident', linewidth=4, markersize=8)
     ax.legend()
     ax.set_ylabel('Neutron number')
+    plt.xlim([-0.1, 14,])
   elif args.perLayer:  #plot efficiency per layer
+    first = False
+    if first:
+      layer_incident_lambda = hc.hist("layer_first_incident_lambda_true") if args.trueWavelength else hc.hist("layer_first_incident_lambda")
+    else:
+      layer_incident_lambda = hc.hist("layer_incident_lambda_true") if args.trueWavelength else hc.hist("layer_incident_lambda")
+    [histData, histAxisX, histAxisY, hist2plotTitle, histLabelX, histLabelY] = BCSplt.disassembleHist2d(layer_incident_lambda)
+    for i in range(4):
+      layer_hit_i = hc.hist(f"layer{i}_lambda_true_hit") if args.trueWavelength else hc.hist(f"layer{i}_lambda_hit")
+      [hit_number, histError, histAxis, _, _] = BCSplt.disassembleHist1d(layer_hit_i)
+      efficiency_i, error_i = divide.divide(np.array(hit_number), np.array(histError), np.array(histData[i,:]), np.sqrt(np.array(histData[i,:])))
+      ax.errorbar(histAxis, efficiency_i * 100, yerr=(error_i * 100), fmt='o--', linewidth=4, markersize=8, label=f'Layer {i+1}')
+    ax.errorbar(histAxis, values, yerr=errors, fmt='o--', linewidth=4, markersize=8, label='Global')
+    ax.set_yticks(np.arange(0, 110, 10))
+    #plt.ylim([0, 100])
+    plt.axis([-0.1, 14, 0, 100])
+    ax.set_ylabel('Detection efficiency [\%]')
+    ax.legend()
+  elif args.perStraw:  #plot efficiency per layer
+    straw_incident_lambda = hc.hist("straw_incident_lambda_true") if args.trueWavelength else hc.hist("straw_incident_lambda")
+    straw_lambda_hit = hc.hist("straw_lambda_true_hit") if args.trueWavelength else hc.hist("straw_lambda_hit")
+    rebinFactor = 1 #5 #13
+    [histData, histAxisX, histAxisY, _, _, _] = BCSplt.disassembleHist2d(straw_incident_lambda)
+    print(len(histAxisY))
+    [histData_inc, _, histAxis] = BCSplt.shrinkArray(histData, len(histAxisX), int(len(histAxisY)/rebinFactor), histAxisX, histAxisY)
+    [histData, histAxisX, histAxisY, _, _, _] = BCSplt.disassembleHist2d(straw_lambda_hit)
+    [histData_hit, _, _] = BCSplt.shrinkArray(histData, len(histAxisX), int(len(histAxisY)/rebinFactor), histAxisX, histAxisY)
+    
+    numberOfStraws = 28*8*7 #1568
+    frontLayerIdEnd = 28*4*7
+    
+    frontLayers = [sum(histData_inc[i,:]) for i in range(frontLayerIdEnd)]
+    backLayers = [sum(histData_inc[i,:]) for i in range(frontLayerIdEnd, numberOfStraws)]
+    frontLayers.sort()
+    backLayers.sort()
+    front5thValue = frontLayers[-5]
+    back5thValue = backLayers[-5]
+
+    for i in range(numberOfStraws): 
+      if((i < frontLayerIdEnd and sum(histData_inc[i,:]) < front5thValue) or (i >= frontLayerIdEnd and sum(histData_inc[i,:]) < back5thValue)):
+        continue
+      #print(i, sum(histData_inc[i,:]))
+      efficiency_i, error_i = divide.divide(np.array(histData_hit[i,:]), np.sqrt(np.array(histData_hit[i,:])), np.array(histData_inc[i,:]), np.sqrt(np.array(histData_inc[i,:]))) 
+      ax.errorbar(histAxis, efficiency_i * 100, yerr=(error_i * 100), fmt='o--', linewidth=4, markersize=8 ,label=f'Straw {i}')
+    # ax.errorbar(histAxis, values, yerr=errors, fmt='o--', linewidth=4, markersize=8, label='Global')
+    #ax.errorbar(histAxis, values, yerr=errors, fmt='o--', linewidth=4, markersize=8)
+    ax.set_yticks(np.arange(0, 110, 10))
+    #plt.ylim([0, 100])
+    #plt.axis([-0.1, 14, 0, 100])
+    plt.axis([-0.1, 14, 0, 40])
+    ax.set_ylabel('Detection efficiency [\%]')
+    ax.legend()
+  elif args.perLayerContribution:
     for i in range(4):
       # layer_hit_i = hc.hist(f"panel_lambda%s_hit"%i)
-      layer_hit_i = hc.hist(f"layer{i}_lambda_hit")
-      [hit_number, histError, histAxis, titleText, histLabel] = BCSplt.disassembleHist1d(layer_hit_i)
+      layer_hit_i = hc.hist(f"layer{i}_lambda_true_hit") if args.trueWavelength else hc.hist(f"layer{i}_lambda_hit")
+      [hit_number, histError, histAxis, _, _] = BCSplt.disassembleHist1d(layer_hit_i)
       efficiency_i, error_i = divide.divide( np.array(hit_number), np.array(histError), incidentNeutronNumber, np.sqrt(incidentNeutronNumber))
       ax.errorbar(histAxis, efficiency_i * 100, yerr=(error_i * 100), fmt='o--', linewidth=4, markersize=8, label=f'Layer {i+1}')
-    ax.errorbar(histAxis, values, yerr=errors, fmt='o--', linewidth=4, markersize=8, label='Total')
+    ax.errorbar(histAxis, values, yerr=errors, fmt='o--', linewidth=4, markersize=8, label='Global')
     ax.set_yticks(np.arange(0, 110, 10))
-    ax.set_ylabel('Detection efficiency [\%]')
+    #plt.ylim([0, 100])
+    plt.axis([-0.1, 14, 0, 100])
+    ax.set_ylabel('Det. efficiency contribution [\%]')
     ax.legend()
   else: #plot efficiency
     ax.errorbar(histAxis, values, yerr=errors, fmt='o--', linewidth=4, markersize=8)
     ax.set_yticks(np.arange(0, 110, 10))
     ax.set_ylabel('Detection efficiency [\%]')
 
-
-  ax.set_xlabel('Wavelength [{\AA}]')
+  xLabel = 'True wavelength [{\AA}]' if args.trueWavelength else 'Wavelength [{\AA}]'
+  ax.set_xlabel(xLabel)
   plt.tight_layout(pad=0.5, w_pad=0.2, h_pad=0.1)
 
   ax.grid()
   # plt.axis([-0.5, 14.5, 0, 100])
 
-  saveOrShowFig(plt, 'efficiencyLarmorRearBank')
-  np.savetxt("efficiency_bincenters.csv", [values,binCenters], delimiter=",") #np.linspace(0.0, 14.0, 326)
+  saveOrShowFig(plt, 'efficiencyLarmor2022')
+  # np.savetxt("efficiency_bincenters.csv", [values,binCenters], delimiter=",") #np.linspace(0.0, 14.0, 326)
 
 elif(args.overlayTheta):
 
